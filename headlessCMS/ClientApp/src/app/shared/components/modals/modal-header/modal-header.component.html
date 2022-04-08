@@ -1,0 +1,14 @@
+<h1 mat-dialog-title class="title">
+  <div [ngSwitch]="messageType" class="icon-wrapper">
+    <mat-icon *ngSwitchCase="'info'" class="color-info">info</mat-icon>
+    <mat-icon *ngSwitchCase="'error'" class="color-error"
+      >error_outline</mat-icon
+    >
+    <mat-icon *ngSwitchCase="'success'" class="color-success"
+      >check_circle</mat-icon
+    >
+    <span *ngSwitchDefault></span>
+  </div>
+  {{ headline }}
+</h1>
+<mat-divider class="bg-{{ messageType }} divider"></mat-divider>

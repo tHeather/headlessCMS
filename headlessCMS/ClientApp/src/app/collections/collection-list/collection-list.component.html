@@ -1,0 +1,14 @@
+<app-page-header
+  [icon]="'format_list_bulleted'"
+  [headline]="'Collection list'"
+></app-page-header>
+
+<mat-nav-list>
+  <a
+    mat-list-item
+    [routerLink]="['/collection/edit', collection]"
+    *ngFor="let collection of collections"
+  >
+    {{ collection }}
+  </a>
+</mat-nav-list>

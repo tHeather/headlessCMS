@@ -1,0 +1,15 @@
+.layout {
+  min-height: 100vh;
+}
+
+.sidenav {
+  padding: 10px;
+}
+
+.main {
+  padding: 30px;
+  overflow: auto;
+  @media (max-width: 500px) {
+    padding: 15px;
+  }
+}

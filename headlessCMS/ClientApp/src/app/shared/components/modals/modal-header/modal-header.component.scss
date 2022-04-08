@@ -1,0 +1,40 @@
+.color {
+  &-success {
+    color: var(--color-success);
+  }
+  &-error {
+    color: var(--color-danger);
+  }
+  &-info {
+    color: var(--color-info);
+  }
+}
+
+.bg {
+  &-success {
+    background-color: var(--color-success);
+  }
+  &-error {
+    background-color: var(--color-danger);
+  }
+  &-info {
+    background-color: var(--color-info);
+  }
+}
+
+.title {
+  margin-bottom: 5px;
+  display: flex;
+  align-items: center;
+}
+
+.icon-wrapper {
+  display: flex;
+  align-items: center;
+  margin-right: 7px;
+}
+
+.divider {
+  border-top-color: rgba(0, 0, 0, 0);
+  margin-bottom: 20px;
+}

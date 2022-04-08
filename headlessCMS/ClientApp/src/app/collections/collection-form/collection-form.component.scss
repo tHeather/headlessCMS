@@ -1,0 +1,36 @@
+.spinner {
+  margin: calc(50vh - 198px) auto;
+}
+
+.form {
+  padding-bottom: 30px;
+}
+
+.fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, 500px);
+  @media (max-width: 500px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.field-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.add-field-button {
+  margin-top: 10px;
+}
+
+.remove-field-button {
+  padding: 7.5px;
+  margin-bottom: 1.34375em;
+}
+
+.save-button {
+  display: block;
+  margin-top: 50px;
+  background-color: var(--color-success);
+}

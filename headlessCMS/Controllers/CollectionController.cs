@@ -19,7 +19,8 @@ namespace headlessCMS.Controllers
         [HttpPost("create")]
         public async Task<IActionResult> CreateCollection([FromBody] CreateCollectionDTO createCollectionDTO)
         {
-            var createCollection = new CreateCollection(){
+            var createCollection = new CreateCollection()
+            {
                 Name = createCollectionDTO.Name,
                 Fields = createCollectionDTO.Fields
             };

@@ -1,0 +1,18 @@
+<mat-accordion *ngFor="let linkGroup of linkGroups">
+  <mat-expansion-panel class="accordion">
+    <mat-expansion-panel-header class="accordion__header">
+      <mat-panel-title class="accordion__title">
+        <mat-icon>{{ linkGroup.icon }}</mat-icon>
+        <span class="group-title">{{ linkGroup.name }}</span>
+      </mat-panel-title>
+    </mat-expansion-panel-header>
+    <a
+      *ngFor="let link of linkGroup.links"
+      mat-button
+      class="link"
+      routerLink="{{ link.link }}"
+    >
+      {{ link.label }}
+    </a>
+  </mat-expansion-panel>
+</mat-accordion>

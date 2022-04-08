@@ -1,5 +1,4 @@
 ﻿using headlessCMS.Services.Interfaces;
-using headlessCMS.Models.DTOs;
 using headlessCMS.Dictionary;
 using System.Text;
 using Dapper;
@@ -31,9 +30,9 @@ namespace headlessCMS.Services
 
             foreach (var field in createCollection.Fields)
             {
-                var mappedFieldType = DataTypesDictionary.MapToDatabaseType[field.Value.ToUpper()];
-                query.Append($"{field.Key} {mappedFieldType},");
-                mappedFieldsAndTypes.Add(field.Key, mappedFieldType);
+                var mappedFieldType = DataTypesDictionary.MapToDatabaseType[field.FieldType.ToUpper()];
+                query.Append($"{field.Name} {mappedFieldType},");
+                mappedFieldsAndTypes.Add(field.Name, mappedFieldType);
             }
 
             query.Append(");");

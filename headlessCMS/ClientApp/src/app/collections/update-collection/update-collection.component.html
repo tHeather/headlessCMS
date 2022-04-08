@@ -1,0 +1,8 @@
+<app-page-header
+  [icon]="'edit'"
+  [headline]="'Edit collection'"
+></app-page-header>
+<app-prev-page-button [defaultUrl]="'collection/list'"></app-prev-page-button>
+<app-collection-form
+  (submitFormEvent)="updateCollection()"
+></app-collection-form>

@@ -1,0 +1,12 @@
+<app-modal-header
+  [messageType]="data.messageType"
+  [headline]="data.headline"
+></app-modal-header>
+<div mat-dialog-content>
+  {{ data.text }}
+</div>
+<div mat-dialog-actions>
+  <a mat-button [routerLink]="data.redirectUrl" mat-dialog-close>{{
+    data.redirectButtonText
+  }}</a>
+</div>
