@@ -2,7 +2,7 @@
 
 namespace headlessCMS.Dictionary
 {
-    public class DataTypesDictionary
+    public class DataTypesMapper
     {
         public static readonly Dictionary<string, string> MapToDatabaseType = new Dictionary<string, string>()
              {

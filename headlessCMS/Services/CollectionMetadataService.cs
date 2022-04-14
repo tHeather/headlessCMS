@@ -30,8 +30,9 @@ namespace headlessCMS.Services
 
             foreach (var field in createCollection.Fields)
             {
-                var mappedFieldType = DataTypesDictionary.MapToDatabaseType[field.FieldType.ToUpper()];
-                query.Append($"{field.Name} {mappedFieldType},");
+                var mappedFieldType = DataTypesMapper.MapToDatabaseType[field.FieldType.ToUpper()];
+                var nullability  = field.IsRequierd ? "NOT NULL":"";
+                query.Append($"{field.Name} {mappedFieldType} {nullability},");
                 mappedFieldsAndTypes.Add(field.Name, mappedFieldType);
             }
 

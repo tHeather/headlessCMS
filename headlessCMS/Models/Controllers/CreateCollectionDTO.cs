@@ -6,5 +6,6 @@ namespace headlessCMS.Models.DTOs
     {
         public string Name { get; set; }
         public IEnumerable<Field> Fields { get; set; }
+        public bool IsRequierd { get; set; }
     }
 }

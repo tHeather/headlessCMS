@@ -5,73 +5,76 @@
   (ngSubmit)="submitForm()"
   class="form"
 >
-  <h2>Collection</h2>
-  <mat-form-field appearance="outline">
-    <mat-label>Collection name: </mat-label>
-    <input matInput id="name" type="text" formControlName="name" required />
-    <mat-error *ngIf="name.errors?.['required']"> Name is required. </mat-error>
-  </mat-form-field>
+  <div class="collection">
+    <h2>Collection</h2>
+    <mat-form-field appearance="outline">
+      <mat-label>Collection name: </mat-label>
+      <input matInput id="name" type="text" formControlName="name" required />
+      <mat-error *ngIf="name.errors?.['required']">
+        Name is required.
+      </mat-error>
+    </mat-form-field>
 
-  <div formArrayName="fields">
-    <h2>Fields</h2>
-    <div class="fields">
-      <div *ngFor="let field of fields.controls; let i = index">
-        <div [formGroupName]="i" class="field-row">
-          <mat-form-field appearance="outline">
-            <mat-label>Field name:</mat-label>
-            <input
-              matInput
-              id="field-{{ i }}"
-              type="text"
-              formControlName="name"
-            />
-            <mat-error *ngIf="field.get('name')?.errors?.['required']">
-              Name is required.
-            </mat-error>
-            <mat-error *ngIf="field.get('name')?.errors?.['uniq']">
-              The name must be unique.
-            </mat-error>
-          </mat-form-field>
-
-          <mat-form-field appearance="outline">
-            <mat-label>Data type:</mat-label>
-            <mat-select id="select-{{ i }}" formControlName="fieldType">
-              <mat-option *ngFor="let type of fieldTypes" [value]="type">
-                {{ type }}
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
-
-          <button
-            (click)="removeField(i)"
-            [disabled]="fields.controls.length < 2"
-            mat-stroked-button
-            class="remove-field-button"
-            color="warn"
-          >
-            <mat-icon>delete</mat-icon>
-          </button>
-        </div>
-      </div>
-    </div>
+    <button
+      type="submit"
+      [disabled]="!form.valid"
+      mat-raised-button
+      class="save-button"
+    >
+      Save collection
+    </button>
   </div>
 
-  <button
-    (click)="addField()"
-    type="button"
-    mat-raised-button
-    color="primary"
-    class="add-field-button"
-  >
-    Add field
-  </button>
+  <div class="fields" formArrayName="fields">
+    <h2>Fields</h2>
+    <div
+      *ngFor="let field of fields.controls; let i = index"
+      [formGroupName]="i"
+      class="fields__row"
+    >
+      <span class="fields__number">{{ i + 1 }}</span>
+      <mat-form-field appearance="outline">
+        <mat-label>Field name:</mat-label>
+        <input matInput id="field-{{ i }}" type="text" formControlName="name" />
+        <mat-error *ngIf="field.get('name')?.errors?.['required']">
+          Name is required.
+        </mat-error>
+        <mat-error *ngIf="field.get('name')?.errors?.['uniq']">
+          The name must be unique.
+        </mat-error>
+      </mat-form-field>
 
-  <button
-    type="submit"
-    [disabled]="!form.valid"
-    mat-raised-button
-    class="save-button"
-  >
-    Save collection
-  </button>
+      <mat-form-field appearance="outline">
+        <mat-label>Data type:</mat-label>
+        <mat-select id="select-{{ i }}" formControlName="fieldType">
+          <mat-option *ngFor="let type of fieldTypes" [value]="type">
+            {{ type }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-checkbox class="fields__checkbox" formControlName="isRequierd">
+        Required
+      </mat-checkbox>
+
+      <button
+        (click)="removeField(i)"
+        [disabled]="fields.controls.length < 2"
+        mat-stroked-button
+        class="remove-field-button"
+        color="warn"
+      >
+        <mat-icon>delete</mat-icon>
+      </button>
+    </div>
+    <button
+      (click)="addField()"
+      type="button"
+      mat-raised-button
+      color="primary"
+      class="add-field-button"
+    >
+      Add field
+    </button>
+  </div>
 </form>

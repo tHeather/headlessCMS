@@ -30,6 +30,7 @@ import { PrevPageButtonComponent } from './shared/components/prev-page-button/pr
 import { RedirectModalComponent } from './shared/components/modals/redirect-modal/redirect-modal.component';
 import { ModalHeaderComponent } from './shared/components/modals/modal-header/modal-header.component';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 
 @NgModule({
   declarations: [
@@ -65,6 +66,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
     MatDialogModule,
     MatListModule,
     MatProgressSpinnerModule,
+    MatCheckboxModule,
   ],
   providers: [],
   bootstrap: [AppComponent],

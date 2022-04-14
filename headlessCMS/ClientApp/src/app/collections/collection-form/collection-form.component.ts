@@ -23,6 +23,7 @@ export class CollectionFormComponent {
         this.fb.group({
           name: ['', Validators.required],
           fieldType: [fieldType.String, Validators.required],
+          isRequierd: [false, Validators.required],
         }),
       ],
       uniqFieldNameValidator
@@ -46,6 +47,7 @@ export class CollectionFormComponent {
       this.fb.group({
         name: ['', Validators.required],
         fieldType: [fieldType.String, Validators.required],
+        isRequierd: [false, Validators.required],
       })
     );
   }
