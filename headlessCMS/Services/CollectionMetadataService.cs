@@ -45,6 +45,11 @@ namespace headlessCMS.Services
             transactionScope.Complete();
         }
 
+        public async Task<IEnumerable<string>> GetCollectionsNames()
+        {
+          return await _dbConnection.QueryAsync<string>("SELECT collectionName FROM collections");
+        }
+
         private async Task<Guid> AddCollection(string collectionName)
         {
            var id = await _dbConnection.ExecuteScalarAsync<Guid>(@$"

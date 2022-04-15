@@ -23,7 +23,7 @@ export class CollectionsHttpService {
   }
 
   getCollections(): Observable<string[]> {
-    return this.http.get<string[]>('/collection').pipe(
+    return this.http.get<string[]>('/collection/get-all').pipe(
       catchError((error: HttpErrorResponse) => {
         this.modal.displayCommonErrorStatusMessage(error.status);
         throw error;

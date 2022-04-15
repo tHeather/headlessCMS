@@ -31,5 +31,11 @@ namespace headlessCMS.Controllers
             return Ok();
         }
 
+        [HttpGet("get-all")]
+        public async Task<IEnumerable<string>> GetCollections()
+        {
+            return await _collectionService.GetCollectionsNames();
+        }
+
     }
 }
