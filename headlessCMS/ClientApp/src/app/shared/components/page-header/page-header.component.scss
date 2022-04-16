@@ -1,11 +1,10 @@
 .headline {
   display: flex;
   align-items: center;
+  padding: 20px;
+  background-color: var(--color-header);
+  color: var(--color-side-nav);
   .mat-icon {
     margin-right: 10px;
   }
-}
-
-.divider {
-  margin-bottom: 30px;
 }

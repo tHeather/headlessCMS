@@ -3,8 +3,8 @@
     <app-sidenav></app-sidenav>
   </mat-drawer>
   <div>
-    <mat-toolbar>
-      <button mat-icon-button (click)="drawer.toggle()" *ngIf="!isDesktop">
+    <mat-toolbar *ngIf="!isDesktop">
+      <button mat-icon-button (click)="drawer.toggle()">
         <mat-icon>menu</mat-icon>
       </button>
     </mat-toolbar>

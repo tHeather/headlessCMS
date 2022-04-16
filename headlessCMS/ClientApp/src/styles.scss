@@ -37,6 +37,10 @@ $client-app-theme: mat.define-light-theme(
 
 /* You can add global styles to this file, and also import other style files */
 
+.mat-typography h2{
+  font-size: 22px;
+}
+
 *,
 ::after,
 ::before {
@@ -47,6 +51,9 @@ $client-app-theme: mat.define-light-theme(
   --color-success: #32d74b;
   --color-danger: #ff3a30;
   --color-info: #007bff;
+  --color-header:#f0f1f6;
+  --color-side-nav:#18202e;
+  --color-white:#fafafa;
 }
 
 html,

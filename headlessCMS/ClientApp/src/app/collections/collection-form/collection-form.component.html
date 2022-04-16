@@ -33,7 +33,7 @@
       class="fields__row"
     >
       <span class="fields__number">{{ i + 1 }}</span>
-      <mat-form-field appearance="outline">
+      <mat-form-field appearance="outline" class="fields__name">
         <mat-label>Field name:</mat-label>
         <input matInput id="field-{{ i }}" type="text" formControlName="name" />
         <mat-error *ngIf="field.get('name')?.errors?.['required']">
