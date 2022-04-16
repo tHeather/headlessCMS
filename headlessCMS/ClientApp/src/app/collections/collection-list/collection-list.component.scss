@@ -1,0 +1,23 @@
+.list{
+    width: 100%;
+    max-width: 900px;
+    margin: auto;
+    padding: 0 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    a{
+        margin-top: 20px;
+        ::ng-deep .mat-list-item-content{
+            padding: 0 ;
+        }
+    }
+
+}
+
+.card{
+    width: 100%;
+    display: block;
+   z-index: -1;
+}

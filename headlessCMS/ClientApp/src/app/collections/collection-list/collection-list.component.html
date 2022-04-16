@@ -3,12 +3,15 @@
   [headline]="'Collection list'"
 ></app-page-header>
 
-<mat-nav-list>
+<mat-nav-list class="list">
   <a
     mat-list-item
     [routerLink]="['/collection/edit', collection]"
     *ngFor="let collection of collections"
   >
-    {{ collection }}
+    <mat-card class="card">
+      {{ collection }}
+      <!-- <mat-divider></mat-divider> -->
+    </mat-card>
   </a>
 </mat-nav-list>
