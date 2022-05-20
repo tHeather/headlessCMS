@@ -25,7 +25,8 @@ namespace headlessCMS.Services
             var mappedFieldsAndTypes = new Dictionary<string,string>();
 
             var query = new StringBuilder(
-            $"CREATE TABLE {createCollection.Name} (Id UNIQUEIDENTIFIER NOT NULL DEFAULT newid(),"
+            @$"CREATE TABLE {createCollection.Name} 
+               (id UNIQUEIDENTIFIER NOT NULL DEFAULT newid(), dataState INT NOT NULL, publishedVersionId UNIQUEIDENTIFIER,"
             );
 
             foreach (var field in createCollection.Fields)
@@ -39,8 +40,8 @@ namespace headlessCMS.Services
             query.Append(");");
 
             await _dbConnection.QueryAsync(query.ToString());
-            var collectionId = await AddCollection(createCollection.Name);
-            await AddCollectionFields(collectionId, mappedFieldsAndTypes);
+            await AddCollection(createCollection.Name);
+            await AddCollectionFields(createCollection.Name, mappedFieldsAndTypes);
 
             transactionScope.Complete();
         }
@@ -50,19 +51,16 @@ namespace headlessCMS.Services
           return await _dbConnection.QueryAsync<string>("SELECT collectionName FROM collections");
         }
 
-        private async Task<Guid> AddCollection(string collectionName)
+        private async Task AddCollection(string collectionName)
         {
-           var id = await _dbConnection.ExecuteScalarAsync<Guid>(@$"
-               INSERT INTO collections (collectionName) 
-               OUTPUT INSERTED.Id
-               VALUES ('{collectionName}');
-               ");
-
-            return id;
+           await _dbConnection.ExecuteAsync(@$"
+                INSERT INTO collections (collectionName) 
+                VALUES ('{collectionName}');
+                ");
         }
 
         private async Task AddCollectionFields(
-            Guid collectionId, Dictionary<string,string> mappedFieldsAndTypes
+            string collectionName, Dictionary<string,string> mappedFieldsAndTypes
             )
         {
             var rows = new StringBuilder();
@@ -70,31 +68,22 @@ namespace headlessCMS.Services
             foreach (var mappedFieldAndType in mappedFieldsAndTypes)
             {
                 rows.Append(
-                    $"(newid(),'{collectionId}','{mappedFieldAndType.Key}','{mappedFieldAndType.Value}'),"
+                    $"('{collectionName}','{mappedFieldAndType.Key}','{mappedFieldAndType.Value}'),"
                     );
             }
 
             rows.Remove(rows.Length - 1, 1);
 
             await _dbConnection.ExecuteAsync(@$"
-                   INSERT INTO collectionFields (Id,collectionId,name,type) 
+                   INSERT INTO collectionFields (collectionName, name, type) 
                    VALUES {rows};
                ");
         }
 
-        public async Task<IEnumerable<CollectionField>> GetCollectionFieldsByCollectionName(string name)
+        public async Task<IEnumerable<CollectionField>> GetCollectionFieldsByCollectionName(string collectionName)
         {
-            var id = await GetCollectionIdByCollectionName(name);
-
             return await _dbConnection.QueryAsync<CollectionField>(
-                $"SELECT * FROM collectionFields WHERE collectionId = '{id}';"
-                );
-        }
-
-        public async Task<Guid> GetCollectionIdByCollectionName(string name)
-        {
-            return await _dbConnection.QuerySingleOrDefaultAsync<Guid>(
-                $"SELECT id FROM collections WHERE collectionName = '{name}';"
+                $"SELECT * FROM collectionFields WHERE collectionName = '{collectionName}';"
                 );
         }
 

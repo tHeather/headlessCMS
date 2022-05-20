@@ -3,6 +3,6 @@
     public class DeleteData
     {
         public string CollectionName { get; set; }
-        public Guid RowId  { get; set; }
+        public Guid DraftId  { get; set; }
     }
 }

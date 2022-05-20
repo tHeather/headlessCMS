@@ -1,9 +1,11 @@
-﻿namespace headlessCMS.Models.ValueObjects
+﻿using headlessCMS.Models.Shared;
+
+namespace headlessCMS.Models.ValueObjects
 {
     public class UpdateData
     {
         public Guid RowId { get; set; }
         public string CollectionName { get; set; }
-        public Dictionary<string, string> ColumnsWithValues { get; set; }
+        public List<ColumnWithValue> ColumnsWithValues { get; set; }
     }
 }

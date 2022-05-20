@@ -8,7 +8,6 @@ namespace headlessCMS.Services.Interfaces
     {
         public  Task CreateCollection(CreateCollection reateCollection);
         public Task<IEnumerable<CollectionField>> GetCollectionFieldsByCollectionName(string name);
-        public Task<Guid> GetCollectionIdByCollectionName(string name);
         public Task<IEnumerable<string>> GetCollectionsNames();
     }
 }

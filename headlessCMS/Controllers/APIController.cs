@@ -1,4 +1,6 @@
-﻿using headlessCMS.Models.ValueObjects;
+﻿using headlessCMS.Enums;
+using headlessCMS.Models.Shared;
+using headlessCMS.Models.ValueObjects;
 using headlessCMS.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
@@ -16,38 +18,36 @@ namespace headlessCMS.Controllers
         }
 
         [HttpGet("{collectionName}")]
-        public async Task<IActionResult> GetData(string collectionName)
+        public async Task<IActionResult> GetData(string collectionName, DataStates dataState)
         {
-            var data = await _collectionDataService.GetData(collectionName);
+            var data = await _collectionDataService.GetData(collectionName, dataState);
 
             return Ok(data);
         }
 
         [HttpPost("{collectionName}")]
-        public async Task<IActionResult> InsertData(
-            string collectionName,[FromBody] Dictionary<string, string> ColumnsWithValues
-            )
+        public async Task<IActionResult> InsertData
+            (string collectionName, [FromBody] List<ColumnWithValue> columnsWithValues)
         {
-
             var insertData  = new InsertData() 
             {
                 CollectionName = collectionName,
-                ColumnsWithValues = ColumnsWithValues
+                ColumnsWithValues = columnsWithValues
             };
 
-            await _collectionDataService.InsertData(insertData);
+            await _collectionDataService.SaveDraft(insertData);
 
             return Ok();
         }
 
-        [HttpDelete("{collectionName}/{id}")]
-        public async Task<IActionResult> DeleteData(string collectionName, Guid id)
+        [HttpDelete("{collectionName}/{draftId}")]
+        public async Task<IActionResult> DeleteData(string collectionName, Guid draftId)
         {
 
             var deleteData = new DeleteData() 
             {
                 CollectionName = collectionName,
-                RowId = id
+                DraftId = draftId
             };
 
             await _collectionDataService.DeleteData(deleteData);
@@ -57,8 +57,7 @@ namespace headlessCMS.Controllers
 
         [HttpPut("{collectionName}/{id}")]
         public async Task<IActionResult> UpdateData(
-            string collectionName, Guid id, [FromBody] Dictionary<string, string> ColumnsWithValues
-            )
+            string collectionName, Guid id, [FromBody] List<ColumnWithValue> ColumnsWithValues)
         {
 
             var updateData = new UpdateData()
@@ -68,7 +67,25 @@ namespace headlessCMS.Controllers
                 ColumnsWithValues= ColumnsWithValues
             };
 
-            await _collectionDataService.UpdateData(updateData);
+            await _collectionDataService.UpdateDraft(updateData);
+
+            return Ok();
+        }
+
+        [HttpPost("publish/{collectionName}")]
+        public async Task<IActionResult> PublishData(string collectionName, [FromBody] Guid draftId)
+        {
+
+            await _collectionDataService.PublishData(draftId, collectionName);
+
+            return Ok();
+        }
+
+        [HttpPost("unpublish/{collectionName}")]
+        public async Task<IActionResult> UnpublishData(string collectionName, [FromBody] Guid publishedVersionId)
+        {
+
+            await _collectionDataService.UnpublishData(publishedVersionId, collectionName);
 
             return Ok();
         }

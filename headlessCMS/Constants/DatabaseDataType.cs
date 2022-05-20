@@ -7,5 +7,6 @@
         public const string BOOL = "BIT";
         public const string CHAR = "CHAR";
         public const string DATE = "DATE";
+        public const string NULL = "NULL";
     }
 }

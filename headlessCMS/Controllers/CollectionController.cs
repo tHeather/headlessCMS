@@ -23,7 +23,6 @@ namespace headlessCMS.Controllers
             {
                 Name = createCollectionDTO.Name,
                 Fields = createCollectionDTO.Fields,
-                IsRequierd = createCollectionDTO.IsRequierd,
             };
 
             await _collectionService.CreateCollection(createCollection);
