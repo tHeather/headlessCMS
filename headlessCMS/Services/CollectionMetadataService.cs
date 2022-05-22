@@ -6,6 +6,7 @@ using System.Data.SqlClient;
 using System.Transactions;
 using headlessCMS.Models.Models;
 using headlessCMS.Models.ValueObjects;
+using headlessCMS.Constants;
 
 namespace headlessCMS.Services
 {
@@ -26,7 +27,9 @@ namespace headlessCMS.Services
 
             var query = new StringBuilder(
             @$"CREATE TABLE {createCollection.Name} 
-               (id UNIQUEIDENTIFIER NOT NULL DEFAULT newid(), dataState INT NOT NULL, publishedVersionId UNIQUEIDENTIFIER,"
+               (id UNIQUEIDENTIFIER NOT NULL DEFAULT newid(), 
+                {ReservedColumns.DATA_STATE} INT NOT NULL, 
+                {ReservedColumns.PUBLISHED_VERSION_ID} UNIQUEIDENTIFIER,"
             );
 
             foreach (var field in createCollection.Fields)
@@ -54,7 +57,7 @@ namespace headlessCMS.Services
         private async Task AddCollection(string collectionName)
         {
            await _dbConnection.ExecuteAsync(@$"
-                INSERT INTO collections (collectionName) 
+                INSERT INTO {ReservedTables.COLLECTIONS} ({ReservedColumns.COLLECTION_NAME}) 
                 VALUES ('{collectionName}');
                 ");
         }
@@ -75,7 +78,7 @@ namespace headlessCMS.Services
             rows.Remove(rows.Length - 1, 1);
 
             await _dbConnection.ExecuteAsync(@$"
-                   INSERT INTO collectionFields (collectionName, name, type) 
+                   INSERT INTO {ReservedTables.COLLECTION_FIELDS} (collectionName, name, type) 
                    VALUES {rows};
                ");
         }
@@ -83,7 +86,7 @@ namespace headlessCMS.Services
         public async Task<IEnumerable<CollectionField>> GetCollectionFieldsByCollectionName(string collectionName)
         {
             return await _dbConnection.QueryAsync<CollectionField>(
-                $"SELECT * FROM collectionFields WHERE collectionName = '{collectionName}';"
+                $"SELECT * FROM {ReservedTables.COLLECTION_FIELDS} WHERE collectionName = '{collectionName}';"
                 );
         }
 

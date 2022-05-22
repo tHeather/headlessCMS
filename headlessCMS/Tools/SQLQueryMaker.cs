@@ -51,7 +51,7 @@ namespace headlessCMS.Tools
         {
             var filteredColumnsWithValues = new List<ColumnWithValue>(columnsWithValues);
 
-            filteredColumnsWithValues.RemoveAll(columnWithValue => ReservedColumns.ReservedColumnsList.Contains(columnWithValue.Name)) ;
+            filteredColumnsWithValues.RemoveAll(columnWithValue => ReservedColumns.ReservedDataTableColumnsList.Contains(columnWithValue.Name)) ;
 
             return filteredColumnsWithValues;
         }

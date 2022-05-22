@@ -8,7 +8,9 @@
 
         public const string PUBLISHED_VERSION_ID = "publishedVersionId";
 
-        public static readonly List<string> ReservedColumnsList = new List<string> {
+        public const string COLLECTION_NAME = "collectionName";
+
+        public static readonly List<string> ReservedDataTableColumnsList = new List<string> {
             ID, DATA_STATE, PUBLISHED_VERSION_ID
         };   
     }
