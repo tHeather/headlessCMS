@@ -14,6 +14,7 @@ builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 builder.Services.AddScoped<ICollectionMetadataService, CollectionMetadataService>();
 builder.Services.AddScoped<ICollectionDataService, CollectionDataService>();
+builder.Services.AddScoped<ISqlService, SqlService>();
 
 var app = builder.Build();
 

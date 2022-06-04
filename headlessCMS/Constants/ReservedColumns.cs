@@ -10,6 +10,8 @@
 
         public const string COLLECTION_NAME = "collectionName";
 
+        public const string NAME = "name";
+
         public static readonly List<string> ReservedDataTableColumnsList = new List<string> {
             ID, DATA_STATE, PUBLISHED_VERSION_ID
         };   

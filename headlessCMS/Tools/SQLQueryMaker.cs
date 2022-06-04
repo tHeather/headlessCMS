@@ -58,7 +58,7 @@ namespace headlessCMS.Tools
 
         private static string FormatStringValue(string? value, string type)
         {
-            if (value == null) return DatabaseDataType.NULL;
+            if (value == null) return "NULL";
             
             return type == DatabaseDataType.INT || type == DatabaseDataType.BOOL ? value : $"'{value}'";
         }

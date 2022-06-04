@@ -2,6 +2,7 @@
 using headlessCMS.Constants;
 using headlessCMS.Enums;
 using headlessCMS.Mappers;
+using headlessCMS.Models.Services;
 using headlessCMS.Models.ValueObjects;
 using headlessCMS.Services.Interfaces;
 using headlessCMS.Tools;
@@ -14,38 +15,38 @@ namespace headlessCMS.Services
     {
         private readonly SqlConnection _dbConnection;
         private readonly ICollectionMetadataService _collectionMetadataService;
+        private readonly ISqlService _sqlService;
 
         public CollectionDataService(
                 SqlConnection connection,
-                ICollectionMetadataService collectionMetadataService
+                ICollectionMetadataService collectionMetadataService,
+                ISqlService sqlService
             )
         {
             _dbConnection = connection;
             _collectionMetadataService = collectionMetadataService;
+            _sqlService = sqlService;
         }
 
         public async Task<Guid> SaveDraft(InsertData insertData)
         {
-            var collectionFields = await _collectionMetadataService
-                                        .GetCollectionFieldsByCollectionName(insertData.CollectionName);
+            var insertQueryParameters = new InsertQueryParameters
+            {
+                CollectionName = insertData.CollectionName,
+                DataState = DataStates.Draft,
+                DataToInsert = insertData.ColumnsWithValues
+            };
 
-            var columnsAndValues = SQLQueryMaker.MakeInsertValuesStrings(collectionFields, insertData.ColumnsWithValues);
-
-            var query = @$"INSERT INTO {insertData.CollectionName} 
-                           ({ReservedColumns.DATA_STATE}, {ReservedColumns.PUBLISHED_VERSION_ID}, {columnsAndValues.Columns}) 
-                           OUTPUT inserted.id
-                           VALUES ({(int)DataStates.Draft}, {DatabaseDataType.NULL}, {columnsAndValues.Values});";
-
-            var draftId = await _dbConnection.ExecuteScalarAsync<Guid>(query);
+            var draftId = await _sqlService.ExecuteInsertQuery(insertQueryParameters);
 
             return draftId;
         }
 
-        public async Task<Guid?> PublishData(Guid draftId, string collectionName)
+        public async Task<Guid> PublishData(Guid draftId, string collectionName)
         {
             using var transactionScope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled);
 
-            Guid? publishedDataId = null;
+            Guid publishedDataId = Guid.Empty;
             dynamic draftDynamic  = await _dbConnection
                                                 .QueryFirstAsync(@$"SELECT * 
                                                                     FROM {collectionName} 
@@ -74,14 +75,14 @@ namespace headlessCMS.Services
             }
             else
             {
-                var columnsAndValues = SQLQueryMaker.MakeInsertValuesStrings(collectionFields, columnsWithValues);
+                var publishedInsertQueryParameters = new InsertQueryParameters
+                {
+                    CollectionName = collectionName,
+                    DataState = DataStates.Published,
+                    DataToInsert = columnsWithValues
+                };
 
-                var publishedInsertQuery = @$"INSERT INTO {collectionName} 
-                                              ({ReservedColumns.DATA_STATE}, {ReservedColumns.PUBLISHED_VERSION_ID}, {columnsAndValues.Columns}) 
-                                              OUTPUT inserted.id
-                                              VALUES ({(int)DataStates.Published}, {DatabaseDataType.NULL}, {columnsAndValues.Values});";
-
-                var publishedId = await _dbConnection.ExecuteScalarAsync<Guid>(publishedInsertQuery);
+                var publishedId = await _sqlService.ExecuteInsertQuery(publishedInsertQueryParameters);
 
                 var draftQuery = @$"UPDATE {collectionName} 
                                     SET {ReservedColumns.PUBLISHED_VERSION_ID} = '{publishedId}' 

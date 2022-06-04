@@ -6,7 +6,7 @@ namespace headlessCMS.Services.Interfaces
     public interface ICollectionDataService
     {
         public Task<Guid> SaveDraft(InsertData insertData);
-        public Task<Guid?> PublishData(Guid draftId, string collectionName);
+        public Task<Guid> PublishData(Guid draftId, string collectionName);
         public Task SaveDraftAndPublishData(InsertData insertData);
         public Task<IEnumerable<dynamic>> GetData(string collectionName, DataStates dataDtate);
         public Task DeleteData(DeleteData deleteData);
