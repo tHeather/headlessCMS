@@ -30,14 +30,14 @@ namespace headlessCMS.Services
 
         public async Task<Guid> SaveDraft(InsertData insertData)
         {
-            var insertQueryParameters = new InsertQueryParameters
+            var insertQueryParameters = new InsertQueryParametersDataCollection
             {
                 CollectionName = insertData.CollectionName,
                 DataState = DataStates.Draft,
                 DataToInsert = insertData.ColumnsWithValues
             };
 
-            var draftId = await _sqlService.ExecuteInsertQuery(insertQueryParameters);
+            var draftId = await _sqlService.ExecuteInsertQueryOnDataCollection(insertQueryParameters);
 
             return draftId;
         }
@@ -51,7 +51,7 @@ namespace headlessCMS.Services
                                                 .QueryFirstAsync(@$"SELECT * 
                                                                     FROM {collectionName} 
                                                                     WHERE id = '{draftId}' 
-                                                                     AND {ReservedColumns.DATA_STATE} = {(int)DataStates.Draft};");
+                                                                     AND {DataCollectionReservedFields.DATA_STATE} = {(int)DataStates.Draft};");
 
             var draft = draftDynamic as IDictionary<string, object>;
 
@@ -60,34 +60,34 @@ namespace headlessCMS.Services
             var columnsWithValues  = DynamicMapper.DynamicToColumnsWithValuesList(draftDynamic);
             var collectionFields = await _collectionMetadataService.GetCollectionFieldsByCollectionName(collectionName);
 
-            if(draft[ReservedColumns.PUBLISHED_VERSION_ID] != null)
+            if(draft[DataCollectionReservedFields.PUBLISHED_VERSION_ID] != null)
             {
                 var values = SQLQueryMaker.MakeUpdateValuesString(collectionFields, columnsWithValues);
 
                 var publishedUpdateQuery = @$"UPDATE {collectionName} 
                                               SET {values}
-                                              WHERE Id = '{draft[ReservedColumns.PUBLISHED_VERSION_ID]}'
-                                                AND {ReservedColumns.DATA_STATE} = {(int)DataStates.Published};";
+                                              WHERE Id = '{draft[DataCollectionReservedFields.PUBLISHED_VERSION_ID]}'
+                                                AND {DataCollectionReservedFields.DATA_STATE} = {(int)DataStates.Published};";
 
                 await _dbConnection.ExecuteAsync(publishedUpdateQuery);
 
-                publishedDataId = (Guid)draft[ReservedColumns.PUBLISHED_VERSION_ID];
+                publishedDataId = (Guid)draft[DataCollectionReservedFields.PUBLISHED_VERSION_ID];
             }
             else
             {
-                var publishedInsertQueryParameters = new InsertQueryParameters
+                var publishedInsertQueryParameters = new InsertQueryParametersDataCollection
                 {
                     CollectionName = collectionName,
                     DataState = DataStates.Published,
                     DataToInsert = columnsWithValues
                 };
 
-                var publishedId = await _sqlService.ExecuteInsertQuery(publishedInsertQueryParameters);
+                var publishedId = await _sqlService.ExecuteInsertQueryOnDataCollection(publishedInsertQueryParameters);
 
                 var draftQuery = @$"UPDATE {collectionName} 
-                                    SET {ReservedColumns.PUBLISHED_VERSION_ID} = '{publishedId}' 
+                                    SET {DataCollectionReservedFields.PUBLISHED_VERSION_ID} = '{publishedId}' 
                                     WHERE id = '{draftId}'
-                                     AND {ReservedColumns.DATA_STATE} = {(int)DataStates.Draft}";
+                                     AND {DataCollectionReservedFields.DATA_STATE} = {(int)DataStates.Draft}";
 
                 await _dbConnection.ExecuteAsync(draftQuery);
 
@@ -119,7 +119,7 @@ namespace headlessCMS.Services
             var query = @$"UPDATE {updateData.CollectionName} 
                            SET {values}
                            WHERE Id = '{updateData.RowId}'
-                            AND {ReservedColumns.DATA_STATE} = {(int)DataStates.Draft}";
+                            AND {DataCollectionReservedFields.DATA_STATE} = {(int)DataStates.Draft}";
 
             await _dbConnection.QueryAsync(query);
         }
@@ -140,12 +140,12 @@ namespace headlessCMS.Services
 
             await _dbConnection.QueryAsync(@$"DELETE FROM {collectionName} 
                                               WHERE Id = '{publishedVersionId}' 
-                                                AND {ReservedColumns.DATA_STATE} = {(int)DataStates.Published};");
+                                                AND {DataCollectionReservedFields.DATA_STATE} = {(int)DataStates.Published};");
 
             await _dbConnection.QueryAsync(@$"UPDATE {collectionName} 
-                                              SET {ReservedColumns.PUBLISHED_VERSION_ID} = NULL 
-                                              WHERE {ReservedColumns.PUBLISHED_VERSION_ID} = '{publishedVersionId}' 
-                                                AND {ReservedColumns.DATA_STATE} = {(int)DataStates.Draft};");
+                                              SET {DataCollectionReservedFields.PUBLISHED_VERSION_ID} = NULL 
+                                              WHERE {DataCollectionReservedFields.PUBLISHED_VERSION_ID} = '{publishedVersionId}' 
+                                                AND {DataCollectionReservedFields.DATA_STATE} = {(int)DataStates.Draft};");
 
             transactionScope.Complete();
         }
@@ -154,7 +154,7 @@ namespace headlessCMS.Services
         {
             return await _dbConnection.QueryAsync(@$"SELECT * 
                                                      FROM {collectionName} 
-                                                     WHERE  {ReservedColumns.DATA_STATE} = {(int)dataDtate};");
+                                                     WHERE  {DataCollectionReservedFields.DATA_STATE} = {(int)dataDtate};");
         }
 
         public async Task DeleteData(DeleteData deleteData)
@@ -163,21 +163,21 @@ namespace headlessCMS.Services
             using var transactionScope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled);
 
             IDictionary<string, object> publishedVersionId = await _dbConnection
-                                                                    .QueryFirstAsync(@$"SELECT {ReservedColumns.PUBLISHED_VERSION_ID} 
+                                                                    .QueryFirstAsync(@$"SELECT {DataCollectionReservedFields.PUBLISHED_VERSION_ID} 
                                                                                         FROM {deleteData.CollectionName} 
                                                                                         WHERE id = '{deleteData.DraftId}'
-                                                                                            AND {ReservedColumns.DATA_STATE} = {(int)DataStates.Draft};");
+                                                                                            AND {DataCollectionReservedFields.DATA_STATE} = {(int)DataStates.Draft};");
 
             await _dbConnection.QueryAsync(@$"DELETE FROM {deleteData.CollectionName} 
                                               WHERE Id = '{deleteData.DraftId}' 
-                                                AND {ReservedColumns.DATA_STATE} = {(int)DataStates.Draft};");
+                                                AND {DataCollectionReservedFields.DATA_STATE} = {(int)DataStates.Draft};");
 
 
-            if(publishedVersionId?[ReservedColumns.PUBLISHED_VERSION_ID] != null)
+            if(publishedVersionId?[DataCollectionReservedFields.PUBLISHED_VERSION_ID] != null)
             {
                 await _dbConnection.QueryAsync(@$"DELETE FROM {deleteData.CollectionName} 
-                                                  WHERE Id = '{(Guid)publishedVersionId[ReservedColumns.PUBLISHED_VERSION_ID]}' 
-                                                    AND {ReservedColumns.DATA_STATE} = {(int)DataStates.Published};");
+                                                  WHERE Id = '{(Guid)publishedVersionId[DataCollectionReservedFields.PUBLISHED_VERSION_ID]}' 
+                                                    AND {DataCollectionReservedFields.DATA_STATE} = {(int)DataStates.Published};");
             }
 
 

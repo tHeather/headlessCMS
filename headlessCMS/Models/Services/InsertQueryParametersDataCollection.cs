@@ -4,7 +4,7 @@ using headlessCMS.Models.Shared;
 
 namespace headlessCMS.Models.Services
 {
-    public class InsertQueryParameters
+    public class InsertQueryParametersDataCollection
     {
         public string CollectionName { get; set; }
         public DataStates DataState { get; set; }

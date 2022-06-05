@@ -20,7 +20,7 @@ namespace headlessCMS.Services
             _dbConnection = connection;
         }
 
-        public async Task<Guid> ExecuteInsertQuery(InsertQueryParameters insertQueryParameters)
+        public async Task<Guid> ExecuteInsertQueryOnDataCollection(InsertQueryParametersDataCollection insertQueryParameters)
         {
             var collectionFields = await GetCollectionFieldsByCollectionName(insertQueryParameters.CollectionName);
             if (!collectionFields.Any()) return Guid.Empty;
@@ -45,11 +45,48 @@ namespace headlessCMS.Services
             columns.Remove(columns.Length - 1, 1);
             
             var query = @$"INSERT INTO {insertQueryParameters.CollectionName} 
-                           ({ReservedColumns.DATA_STATE}, {ReservedColumns.PUBLISHED_VERSION_ID}, {columns}) 
+                           ({DataCollectionReservedFields.DATA_STATE}, {DataCollectionReservedFields.PUBLISHED_VERSION_ID}, {columns}) 
                            OUTPUT inserted.id
                            VALUES ({(int)insertQueryParameters.DataState}, NULL, {values});";
 
             return await _dbConnection.ExecuteScalarAsync<Guid>(query, parameters);
+        }
+
+        public async Task ExecuteInsertQueryOnMetadataCollection(InsertQueryParametersMetadataCollection insertQueryParameters)
+        {
+           var reservedTableFields = ReservedTables.GetReservedTableFields(insertQueryParameters.CollectionName);
+           if (reservedTableFields == null) return;
+
+            var values = new StringBuilder();
+            var columns = string.Join(",", reservedTableFields);
+            var parameters = new DynamicParameters();
+
+            foreach (var (rowToInsert, index) in insertQueryParameters.DataToInsert.Select((rowToInsert, index) => (rowToInsert, index)))
+            {
+                values.Append('(');
+                foreach (var fieldName in reservedTableFields)
+                {
+                    var value = rowToInsert.SingleOrDefault(d => d.Name == fieldName)?.Value;
+                    if (value == null) continue;
+
+                    parameters.Add($"@{index}{fieldName}", value);
+                    values.Append($"@{index}{fieldName},");
+                }
+                if(values[^1] == '(')
+                {
+                    values.Remove(values.Length - 1, 1);
+                }
+                else
+                {
+                    var isLastRow = insertQueryParameters.DataToInsert.Count == index + 1;
+                    values.Replace(",", isLastRow ? ")" : ")," , values.Length - 1, 1);
+                }
+                
+            }
+
+            var query = @$"INSERT INTO {insertQueryParameters.CollectionName} ({columns}) VALUES {values};";
+
+            await _dbConnection.ExecuteAsync(query, parameters);
         }
 
         private async Task<IEnumerable<CollectionField>> GetCollectionFieldsByCollectionName(string collectionName)
@@ -59,13 +96,13 @@ namespace headlessCMS.Services
             return await _dbConnection.QueryAsync<CollectionField>(query, new { collectionName });
         }
 
-        private List<ColumnWithValue> FilterOutReservedColumns(List<ColumnWithValue> columnsWithValues) // WILL BE USE FOR TABLE CREATION
-        {
-            var filteredColumnsWithValues = new List<ColumnWithValue>(columnsWithValues);
+        //private List<ColumnWithValue> FilterOutReservedColumns(List<ColumnWithValue> columnsWithValues) // WILL BE USE FOR TABLE CREATION
+        //{
+        //    var filteredColumnsWithValues = new List<ColumnWithValue>(columnsWithValues);
 
-            filteredColumnsWithValues.RemoveAll(columnWithValue => ReservedColumns.ReservedDataTableColumnsList.Contains(columnWithValue.Name));
+        //    filteredColumnsWithValues.RemoveAll(columnWithValue => ReservedColumns.ReservedDataTableColumnsList.Contains(columnWithValue.Name));
 
-            return filteredColumnsWithValues;
-        }
+        //    return filteredColumnsWithValues;
+        //}
     }
 }

@@ -7,6 +7,8 @@ using System.Transactions;
 using headlessCMS.Models.Models;
 using headlessCMS.Models.ValueObjects;
 using headlessCMS.Constants;
+using headlessCMS.Models.Services;
+using headlessCMS.Models.Shared;
 
 namespace headlessCMS.Services
 {
@@ -14,10 +16,12 @@ namespace headlessCMS.Services
     {
 
         private readonly SqlConnection _dbConnection;
+        private readonly ISqlService _sqlService;
 
-        public CollectionMetadataService(SqlConnection connection)
+        public CollectionMetadataService(SqlConnection connection, ISqlService sqlService)
         {
             _dbConnection = connection;
+            _sqlService = sqlService;
         }
 
         public async Task CreateCollection(CreateCollection createCollection)
@@ -28,8 +32,8 @@ namespace headlessCMS.Services
             var query = new StringBuilder(
             @$"CREATE TABLE {createCollection.Name} 
                (id UNIQUEIDENTIFIER NOT NULL DEFAULT newid(), 
-                {ReservedColumns.DATA_STATE} INT NOT NULL, 
-                {ReservedColumns.PUBLISHED_VERSION_ID} UNIQUEIDENTIFIER,"
+                {DataCollectionReservedFields.DATA_STATE} INT NOT NULL, 
+                {DataCollectionReservedFields.PUBLISHED_VERSION_ID} UNIQUEIDENTIFIER,"
             );
 
             foreach (var field in createCollection.Fields)
@@ -56,31 +60,53 @@ namespace headlessCMS.Services
 
         private async Task AddCollection(string collectionName)
         {
-           await _dbConnection.ExecuteAsync(@$"
-                INSERT INTO {ReservedTables.COLLECTIONS} ({ReservedColumns.COLLECTION_NAME}) 
-                VALUES ('{collectionName}');
-                ");
+            var insertQueryParametersMetadataCollection = new InsertQueryParametersMetadataCollection() {
+                CollectionName = ReservedTables.COLLECTIONS,
+                DataToInsert = new List<List<ColumnWithValue>>()
+                {
+                    new List<ColumnWithValue>() 
+                    { 
+                        new ColumnWithValue
+                        {
+                            Name = CollectionsTableFields.COLLECTION_NAME,
+                            Value = collectionName
+                        } 
+                    }
+                } 
+            };
+
+            await _sqlService.ExecuteInsertQueryOnMetadataCollection(insertQueryParametersMetadataCollection);
         }
 
-        private async Task AddCollectionFields(
-            string collectionName, Dictionary<string,string> mappedFieldsAndTypes
-            )
+        private async Task AddCollectionFields(string collectionName, Dictionary<string, string> mappedFieldsAndTypes)
         {
-            var rows = new StringBuilder();
-
-            foreach (var mappedFieldAndType in mappedFieldsAndTypes)
+          var rows = mappedFieldsAndTypes.Select(field => new List<ColumnWithValue>()
             {
-                rows.Append(
-                    $"('{collectionName}','{mappedFieldAndType.Key}','{mappedFieldAndType.Value}'),"
-                    );
+                new ColumnWithValue()
+                {
+                    Name = CollectionFieldsTableFields.COLLECTION_NAME,
+                    Value = collectionName
+                },
+                new ColumnWithValue()
+                {
+                    Name = CollectionFieldsTableFields.NAME,
+                    Value = field.Key
+                },
+                new ColumnWithValue()
+                {
+                    Name = CollectionFieldsTableFields.TYPE,
+                    Value = field.Value
+                }
             }
+            );
 
-            rows.Remove(rows.Length - 1, 1);
+            var insertQueryParametersMetadataCollection = new InsertQueryParametersMetadataCollection()
+            {
+                CollectionName = ReservedTables.COLLECTION_FIELDS,
+                DataToInsert = new List<List<ColumnWithValue>>(rows)
+            };
 
-            await _dbConnection.ExecuteAsync(@$"
-                   INSERT INTO {ReservedTables.COLLECTION_FIELDS} (collectionName, name, type) 
-                   VALUES {rows};
-               ");
+            await _sqlService.ExecuteInsertQueryOnMetadataCollection(insertQueryParametersMetadataCollection);
         }
 
         public async Task<IEnumerable<CollectionField>> GetCollectionFieldsByCollectionName(string collectionName)
