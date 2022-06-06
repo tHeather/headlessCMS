@@ -24,7 +24,7 @@ namespace headlessCMS.Services
             _sqlService = sqlService;
         }
 
-        public async Task CreateCollection(CreateCollection createCollection)
+        public async Task CreateCollectionAsync(CreateCollection createCollection)
         {
             using var transactionScope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled);
             var mappedFieldsAndTypes = new Dictionary<string,string>();
@@ -47,8 +47,8 @@ namespace headlessCMS.Services
             query.Append(");");
 
             await _dbConnection.QueryAsync(query.ToString());
-            await AddCollection(createCollection.Name);
-            await AddCollectionFields(createCollection.Name, mappedFieldsAndTypes);
+            await AddCollectionAsync(createCollection.Name);
+            await AddCollectionFieldsAsync(createCollection.Name, mappedFieldsAndTypes);
 
             transactionScope.Complete();
         }
@@ -58,7 +58,7 @@ namespace headlessCMS.Services
           return await _dbConnection.QueryAsync<string>("SELECT collectionName FROM collections");
         }
 
-        private async Task AddCollection(string collectionName)
+        private async Task AddCollectionAsync(string collectionName)
         {
             var insertQueryParametersMetadataCollection = new InsertQueryParametersMetadataCollection() {
                 CollectionName = ReservedTables.COLLECTIONS,
@@ -75,10 +75,10 @@ namespace headlessCMS.Services
                 } 
             };
 
-            await _sqlService.ExecuteInsertQueryOnMetadataCollection(insertQueryParametersMetadataCollection);
+            await _sqlService.ExecuteInsertQueryOnMetadataCollectionAsync(insertQueryParametersMetadataCollection);
         }
 
-        private async Task AddCollectionFields(string collectionName, Dictionary<string, string> mappedFieldsAndTypes)
+        private async Task AddCollectionFieldsAsync(string collectionName, Dictionary<string, string> mappedFieldsAndTypes)
         {
           var rows = mappedFieldsAndTypes.Select(field => new List<ColumnWithValue>()
             {
@@ -106,10 +106,10 @@ namespace headlessCMS.Services
                 DataToInsert = new List<List<ColumnWithValue>>(rows)
             };
 
-            await _sqlService.ExecuteInsertQueryOnMetadataCollection(insertQueryParametersMetadataCollection);
+            await _sqlService.ExecuteInsertQueryOnMetadataCollectionAsync(insertQueryParametersMetadataCollection);
         }
 
-        public async Task<IEnumerable<CollectionField>> GetCollectionFieldsByCollectionName(string collectionName)
+        public async Task<IEnumerable<CollectionField>> GetCollectionFieldsByCollectionNameAsync(string collectionName)
         {
             return await _dbConnection.QueryAsync<CollectionField>(
                 $"SELECT * FROM {ReservedTables.COLLECTION_FIELDS} WHERE collectionName = '{collectionName}';"

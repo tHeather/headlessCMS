@@ -28,7 +28,7 @@ namespace headlessCMS.Services
             _sqlService = sqlService;
         }
 
-        public async Task<Guid> SaveDraft(InsertData insertData)
+        public async Task<Guid> SaveDraftAsync(InsertData insertData)
         {
             var insertQueryParameters = new InsertQueryParametersDataCollection
             {
@@ -37,12 +37,12 @@ namespace headlessCMS.Services
                 DataToInsert = insertData.ColumnsWithValues
             };
 
-            var draftId = await _sqlService.ExecuteInsertQueryOnDataCollection(insertQueryParameters);
+            var draftId = await _sqlService.ExecuteInsertQueryOnDataCollectionAsync(insertQueryParameters);
 
             return draftId;
         }
 
-        public async Task<Guid> PublishData(Guid draftId, string collectionName)
+        public async Task<Guid> PublishDataAsync(Guid draftId, string collectionName)
         {
             using var transactionScope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled);
 
@@ -58,7 +58,7 @@ namespace headlessCMS.Services
             if (draft == null) return publishedDataId; 
 
             var columnsWithValues  = DynamicMapper.DynamicToColumnsWithValuesList(draftDynamic);
-            var collectionFields = await _collectionMetadataService.GetCollectionFieldsByCollectionName(collectionName);
+            var collectionFields = await _collectionMetadataService.GetCollectionFieldsByCollectionNameAsync(collectionName);
 
             if(draft[DataCollectionReservedFields.PUBLISHED_VERSION_ID] != null)
             {
@@ -82,7 +82,7 @@ namespace headlessCMS.Services
                     DataToInsert = columnsWithValues
                 };
 
-                var publishedId = await _sqlService.ExecuteInsertQueryOnDataCollection(publishedInsertQueryParameters);
+                var publishedId = await _sqlService.ExecuteInsertQueryOnDataCollectionAsync(publishedInsertQueryParameters);
 
                 var draftQuery = @$"UPDATE {collectionName} 
                                     SET {DataCollectionReservedFields.PUBLISHED_VERSION_ID} = '{publishedId}' 
@@ -99,20 +99,20 @@ namespace headlessCMS.Services
             return publishedDataId;
         }
 
-        public async Task SaveDraftAndPublishData(InsertData insertData)
+        public async Task SaveDraftAndPublishDataAsync(InsertData insertData)
         {
             using var transactionScope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled);
 
-            var draftId = await SaveDraft(insertData);
-            await PublishData(draftId, insertData.CollectionName);
+            var draftId = await SaveDraftAsync(insertData);
+            await PublishDataAsync(draftId, insertData.CollectionName);
 
             transactionScope.Complete();
         }
 
-        public async Task UpdateDraft(UpdateData updateData)
+        public async Task UpdateDraftAsync(UpdateData updateData)
         {
             var collectionFields = await _collectionMetadataService
-                                        .GetCollectionFieldsByCollectionName(updateData.CollectionName);
+                                        .GetCollectionFieldsByCollectionNameAsync(updateData.CollectionName);
 
             var values = SQLQueryMaker.MakeUpdateValuesString(collectionFields, updateData.ColumnsWithValues);
 
@@ -124,17 +124,17 @@ namespace headlessCMS.Services
             await _dbConnection.QueryAsync(query);
         }
 
-        public async Task UpdateDraftAndPublishData(UpdateData updateData)
+        public async Task UpdateDraftAndPublishDataAsync(UpdateData updateData)
         {
             using var transactionScope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled);
 
-            await UpdateDraft(updateData);
-            await PublishData(updateData.RowId, updateData.CollectionName);
+            await UpdateDraftAsync(updateData);
+            await PublishDataAsync(updateData.RowId, updateData.CollectionName);
 
             transactionScope.Complete();
         }
 
-        public async Task UnpublishData(Guid publishedVersionId, string collectionName)
+        public async Task UnpublishDataAsync(Guid publishedVersionId, string collectionName)
         {
             using var transactionScope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled);
 
@@ -157,7 +157,7 @@ namespace headlessCMS.Services
                                                      WHERE  {DataCollectionReservedFields.DATA_STATE} = {(int)dataDtate};");
         }
 
-        public async Task DeleteData(DeleteData deleteData)
+        public async Task DeleteDataAsync(DeleteData deleteData)
         {
 
             using var transactionScope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled);

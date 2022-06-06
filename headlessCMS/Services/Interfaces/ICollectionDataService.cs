@@ -5,13 +5,13 @@ namespace headlessCMS.Services.Interfaces
 {
     public interface ICollectionDataService
     {
-        public Task<Guid> SaveDraft(InsertData insertData);
-        public Task<Guid> PublishData(Guid draftId, string collectionName);
-        public Task SaveDraftAndPublishData(InsertData insertData);
+        public Task<Guid> SaveDraftAsync(InsertData insertData);
+        public Task<Guid> PublishDataAsync(Guid draftId, string collectionName);
+        public Task SaveDraftAndPublishDataAsync(InsertData insertData);
         public Task<IEnumerable<dynamic>> GetData(string collectionName, DataStates dataDtate);
-        public Task DeleteData(DeleteData deleteData);
-        public Task UpdateDraft(UpdateData updateData);
-        public Task UpdateDraftAndPublishData(UpdateData updateData);
-        public Task UnpublishData(Guid publishedVersionId, string collectionName);
+        public Task DeleteDataAsync(DeleteData deleteData);
+        public Task UpdateDraftAsync(UpdateData updateData);
+        public Task UpdateDraftAndPublishDataAsync(UpdateData updateData);
+        public Task UnpublishDataAsync(Guid publishedVersionId, string collectionName);
     }
 }

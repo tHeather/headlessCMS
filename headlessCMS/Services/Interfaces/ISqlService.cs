@@ -4,7 +4,7 @@ namespace headlessCMS.Services.Interfaces
 {
     public interface ISqlService
     {
-        public Task<Guid> ExecuteInsertQueryOnDataCollection(InsertQueryParametersDataCollection insertQueryParameters);
-        public Task ExecuteInsertQueryOnMetadataCollection(InsertQueryParametersMetadataCollection insertQueryParameters);
+        public Task<Guid> ExecuteInsertQueryOnDataCollectionAsync(InsertQueryParametersDataCollection insertQueryParameters);
+        public Task ExecuteInsertQueryOnMetadataCollectionAsync(InsertQueryParametersMetadataCollection insertQueryParameters);
     }
 }

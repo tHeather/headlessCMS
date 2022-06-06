@@ -19,9 +19,9 @@ namespace headlessCMS.Services
             _dbConnection = connection;
         }
 
-        public async Task<Guid> ExecuteInsertQueryOnDataCollection(InsertQueryParametersDataCollection insertQueryParameters)
+        public async Task<Guid> ExecuteInsertQueryOnDataCollectionAsync(InsertQueryParametersDataCollection insertQueryParameters)
         {
-            var collectionFields = await GetCollectionFieldsByCollectionName(insertQueryParameters.CollectionName);
+            var collectionFields = await GetCollectionFieldsByCollectionNameAsync(insertQueryParameters.CollectionName);
             if (!collectionFields.Any()) return Guid.Empty;
 
             var values = new StringBuilder();
@@ -61,7 +61,7 @@ namespace headlessCMS.Services
             return await _dbConnection.ExecuteScalarAsync<Guid>(query, parameters);
         }
 
-        public async Task ExecuteInsertQueryOnMetadataCollection(InsertQueryParametersMetadataCollection insertQueryParameters)
+        public async Task ExecuteInsertQueryOnMetadataCollectionAsync(InsertQueryParametersMetadataCollection insertQueryParameters)
         {
            var reservedTableFields = ReservedTables.GetReservedTableFields(insertQueryParameters.CollectionName);
            if (reservedTableFields == null) return;
@@ -97,7 +97,7 @@ namespace headlessCMS.Services
             await _dbConnection.ExecuteAsync(query, parameters);
         }
 
-        private async Task<IEnumerable<CollectionField>> GetCollectionFieldsByCollectionName(string collectionName)
+        private async Task<IEnumerable<CollectionField>> GetCollectionFieldsByCollectionNameAsync(string collectionName)
         {
             var query = $"SELECT * FROM {ReservedTables.COLLECTION_FIELDS} WHERE collectionName = @collectionName;";
 

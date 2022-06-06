@@ -6,8 +6,8 @@ namespace headlessCMS.Services.Interfaces
 {
     public interface ICollectionMetadataService
     {
-        public  Task CreateCollection(CreateCollection reateCollection);
-        public Task<IEnumerable<CollectionField>> GetCollectionFieldsByCollectionName(string name);
+        public  Task CreateCollectionAsync(CreateCollection reateCollection);
+        public Task<IEnumerable<CollectionField>> GetCollectionFieldsByCollectionNameAsync(string name);
         public Task<IEnumerable<string>> GetCollectionsNames();
     }
 }

@@ -17,7 +17,7 @@ namespace headlessCMS.Controllers
         }
 
         [HttpPost("create")]
-        public async Task<IActionResult> CreateCollection([FromBody] CreateCollectionDTO createCollectionDTO)
+        public async Task<IActionResult> CreateCollectionAsync([FromBody] CreateCollectionDTO createCollectionDTO)
         {
             var createCollection = new CreateCollection()
             {
@@ -25,13 +25,13 @@ namespace headlessCMS.Controllers
                 Fields = createCollectionDTO.Fields,
             };
 
-            await _collectionService.CreateCollection(createCollection);
+            await _collectionService.CreateCollectionAsync(createCollection);
 
             return Ok();
         }
 
         [HttpGet("get-all")]
-        public async Task<IEnumerable<string>> GetCollections()
+        public async Task<IEnumerable<string>> GetCollectionsAsync()
         {
             return await _collectionService.GetCollectionsNames();
         }

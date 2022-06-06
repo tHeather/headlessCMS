@@ -18,7 +18,7 @@ namespace headlessCMS.Controllers
         }
 
         [HttpGet("{collectionName}")]
-        public async Task<IActionResult> GetData(string collectionName, DataStates dataState)
+        public async Task<IActionResult> GetDataAsync(string collectionName, DataStates dataState)
         {
             var data = await _collectionDataService.GetData(collectionName, dataState);
 
@@ -26,7 +26,7 @@ namespace headlessCMS.Controllers
         }
 
         [HttpPost("{collectionName}")]
-        public async Task<IActionResult> InsertData
+        public async Task<IActionResult> InsertDataAsync
             (string collectionName, [FromBody] List<List<ColumnWithValue>> columnsWithValues)
         {
             var insertData  = new InsertData() 
@@ -35,13 +35,13 @@ namespace headlessCMS.Controllers
                 ColumnsWithValues = columnsWithValues
             };
 
-            await _collectionDataService.SaveDraft(insertData);
+            await _collectionDataService.SaveDraftAsync(insertData);
 
             return Ok();
         }
 
         [HttpDelete("{collectionName}/{draftId}")]
-        public async Task<IActionResult> DeleteData(string collectionName, Guid draftId)
+        public async Task<IActionResult> DeleteDataAsync(string collectionName, Guid draftId)
         {
 
             var deleteData = new DeleteData() 
@@ -50,13 +50,13 @@ namespace headlessCMS.Controllers
                 DraftId = draftId
             };
 
-            await _collectionDataService.DeleteData(deleteData);
+            await _collectionDataService.DeleteDataAsync(deleteData);
 
             return Ok();
         }
 
         [HttpPut("{collectionName}/{id}")]
-        public async Task<IActionResult> UpdateData(
+        public async Task<IActionResult> UpdateDataAsync(
             string collectionName, Guid id, [FromBody] List<ColumnWithValue> ColumnsWithValues)
         {
 
@@ -67,25 +67,25 @@ namespace headlessCMS.Controllers
                 ColumnsWithValues= ColumnsWithValues
             };
 
-            await _collectionDataService.UpdateDraft(updateData);
+            await _collectionDataService.UpdateDraftAsync(updateData);
 
             return Ok();
         }
 
         [HttpPost("publish/{collectionName}")]
-        public async Task<IActionResult> PublishData(string collectionName, [FromBody] Guid draftId)
+        public async Task<IActionResult> PublishDataAsync(string collectionName, [FromBody] Guid draftId)
         {
 
-            await _collectionDataService.PublishData(draftId, collectionName);
+            await _collectionDataService.PublishDataAsync(draftId, collectionName);
 
             return Ok();
         }
 
         [HttpPost("unpublish/{collectionName}")]
-        public async Task<IActionResult> UnpublishData(string collectionName, [FromBody] Guid publishedVersionId)
+        public async Task<IActionResult> UnpublishDataAsync(string collectionName, [FromBody] Guid publishedVersionId)
         {
 
-            await _collectionDataService.UnpublishData(publishedVersionId, collectionName);
+            await _collectionDataService.UnpublishDataAsync(publishedVersionId, collectionName);
 
             return Ok();
         }
