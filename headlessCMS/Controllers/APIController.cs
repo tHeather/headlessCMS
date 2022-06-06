@@ -27,7 +27,7 @@ namespace headlessCMS.Controllers
 
         [HttpPost("{collectionName}")]
         public async Task<IActionResult> InsertData
-            (string collectionName, [FromBody] List<ColumnWithValue> columnsWithValues)
+            (string collectionName, [FromBody] List<List<ColumnWithValue>> columnsWithValues)
         {
             var insertData  = new InsertData() 
             {

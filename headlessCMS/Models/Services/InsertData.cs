@@ -6,6 +6,6 @@ namespace headlessCMS.Models.ValueObjects
     public class InsertData
     {
         public string CollectionName { get; set; }
-        public List<ColumnWithValue> ColumnsWithValues { get; set; }
+        public List<List<ColumnWithValue>> ColumnsWithValues { get; set; }
     }
 }

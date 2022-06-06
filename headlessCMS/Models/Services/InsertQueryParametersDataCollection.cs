@@ -8,6 +8,6 @@ namespace headlessCMS.Models.Services
     {
         public string CollectionName { get; set; }
         public DataStates DataState { get; set; }
-        public List<ColumnWithValue> DataToInsert { get; set; }
+        public List<List<ColumnWithValue>> DataToInsert { get; set; }
     }
 }
