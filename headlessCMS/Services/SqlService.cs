@@ -97,6 +97,30 @@ namespace headlessCMS.Services
             await _dbConnection.ExecuteAsync(query, parameters);
         }
 
+        public async Task<Guid> ExecuteDeleteQueryOnDataCollectionAsync(DeleteQueryParametersDataCollection deleteQueryParameters)
+        {
+            var collectionFields = await GetCollectionFieldsByCollectionNameAsync(deleteQueryParameters.CollectionName);
+            if (!collectionFields.Any()) return Guid.Empty;
+
+            var conditions = new StringBuilder();
+            var parameters = new DynamicParameters();
+
+            foreach (var (idAndDataState, index) in deleteQueryParameters.IdsAndDataStates.Select((idAndDataState, index) => (idAndDataState, index)))
+            {
+                var idParameterName = $"@{index}idName";
+                var dataStateParameterName = $"@{index}dataState";
+
+                var separator = deleteQueryParameters.IdsAndDataStates.Count == index + 1 ? "" : "OR";
+                conditions.Append(@$"({DataCollectionReservedFields.ID} = {idParameterName} AND {DataCollectionReservedFields.DATA_STATE} = {dataStateParameterName}) {separator}");
+                parameters.Add(idParameterName, idAndDataState.Id, DbType.Guid);
+                parameters.Add(dataStateParameterName, (int)idAndDataState.DataState, DbType.Int32);
+            }
+
+            return await _dbConnection.ExecuteScalarAsync<Guid>(@$"DELETE FROM {deleteQueryParameters.CollectionName}
+                                                                   OUTPUT deleted.Id
+                                                                   WHERE {conditions};", parameters);
+        }
+
         private async Task<IEnumerable<CollectionField>> GetCollectionFieldsByCollectionNameAsync(string collectionName)
         {
             var query = $"SELECT * FROM {ReservedTables.COLLECTION_FIELDS} WHERE collectionName = @collectionName;";

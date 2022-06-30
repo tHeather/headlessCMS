@@ -1,6 +1,6 @@
 ﻿namespace headlessCMS.Enums
 {
-    public enum DataStates
+    public enum DataState
     {
         Draft = 0,
         Published = 1,

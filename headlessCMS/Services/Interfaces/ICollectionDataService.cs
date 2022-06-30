@@ -8,7 +8,7 @@ namespace headlessCMS.Services.Interfaces
         public Task<Guid> SaveDraftAsync(InsertData insertData);
         public Task<Guid> PublishDataAsync(Guid draftId, string collectionName);
         public Task SaveDraftAndPublishDataAsync(InsertData insertData);
-        public Task<IEnumerable<dynamic>> GetData(string collectionName, DataStates dataDtate);
+        public Task<IEnumerable<dynamic>> GetData(string collectionName, DataState dataDtate);
         public Task DeleteDataAsync(DeleteData deleteData);
         public Task UpdateDraftAsync(UpdateData updateData);
         public Task UpdateDraftAndPublishDataAsync(UpdateData updateData);

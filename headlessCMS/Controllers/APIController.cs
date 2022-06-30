@@ -18,7 +18,7 @@ namespace headlessCMS.Controllers
         }
 
         [HttpGet("{collectionName}")]
-        public async Task<IActionResult> GetDataAsync(string collectionName, DataStates dataState)
+        public async Task<IActionResult> GetDataAsync(string collectionName, DataState dataState)
         {
             var data = await _collectionDataService.GetData(collectionName, dataState);
 
