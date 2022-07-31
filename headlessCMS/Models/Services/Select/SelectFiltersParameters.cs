@@ -1,4 +1,4 @@
-﻿namespace headlessCMS.Models.Services
+﻿namespace headlessCMS.Models.Services.Select
 {
     public class SelectFiltersField
     {

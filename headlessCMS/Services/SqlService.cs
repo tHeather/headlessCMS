@@ -4,6 +4,7 @@ using headlessCMS.Dictionary;
 using headlessCMS.Mappers;
 using headlessCMS.Models.Models;
 using headlessCMS.Models.Services;
+using headlessCMS.Models.Services.Select;
 using headlessCMS.Services.Interfaces;
 using System.Data;
 using System.Data.SqlClient;
@@ -126,8 +127,23 @@ namespace headlessCMS.Services
         {
             if (! await CheckIfCollectionsAndColumnsExistsInDatabase(selectQueryParameters.FieldsFilters)) return new List<dynamic>();
 
+            var selectedFields = MakeSelectedFieldsQueryPart(selectQueryParameters.SelctedFields);
             var filtersString = MakeFilterQueryPart(selectQueryParameters.FieldsFilters);
             return new List<dynamic>();
+        }
+
+        private string MakeSelectedFieldsQueryPart(List<SelectSelectedField> selctedFields)
+        {
+            var query = new StringBuilder("SELECT ");
+
+            foreach (var field in selctedFields)
+            {
+                query.Append($"{field.CollectionName}.{field.FieldName}, ");
+            }
+
+            query.Remove(query.Length - 2, 2);
+
+            return query.ToString();
         }
 
         private async Task<bool> CheckIfCollectionsAndColumnsExistsInDatabase(List<SelectFiltersField> fieldsFilters)
@@ -186,7 +202,7 @@ namespace headlessCMS.Services
                     var filterSign = SelectFiltersMapper.MapFilterToSign[filter.Type];
 
                     var operationSign = PrepareOperationSign(previousOperation, field.Operation);
-                    if (operationSign == string.Empty) return string.Empty; // TO DO: Think how to handle that 
+                    if (operationSign == string.Empty) return string.Empty;
 
                     query.Append($" {operationSign} {collectionAndFieldName} {filterSign} @{collectionAndFieldName}");
                     parameters.Add($"@{collectionAndFieldName}", filter.Value);
