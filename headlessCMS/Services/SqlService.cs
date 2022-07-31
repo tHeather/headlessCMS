@@ -1,6 +1,7 @@
 ﻿using Dapper;
 using headlessCMS.Constants;
 using headlessCMS.Dictionary;
+using headlessCMS.Mappers;
 using headlessCMS.Models.Models;
 using headlessCMS.Models.Services;
 using headlessCMS.Services.Interfaces;
@@ -10,7 +11,7 @@ using System.Text;
 
 namespace headlessCMS.Services
 {
-    public class SqlService: ISqlService
+    public class SqlService : ISqlService
     {
         private readonly SqlConnection _dbConnection;
 
@@ -63,8 +64,8 @@ namespace headlessCMS.Services
 
         public async Task ExecuteInsertQueryOnMetadataCollectionAsync(InsertQueryParametersMetadataCollection insertQueryParameters)
         {
-           var reservedTableFields = ReservedTables.GetReservedTableFields(insertQueryParameters.CollectionName);
-           if (reservedTableFields == null) return;
+            var reservedTableFields = ReservedTables.GetReservedTableFields(insertQueryParameters.CollectionName);
+            if (reservedTableFields == null) return;
 
             var values = new StringBuilder();
             var columns = string.Join(",", reservedTableFields);
@@ -81,14 +82,14 @@ namespace headlessCMS.Services
                     parameters.Add($"@{index}{fieldName}", value);
                     values.Append($"@{index}{fieldName},");
                 }
-                if(values[^1] == '(')
+                if (values[^1] == '(')
                 {
                     values.Remove(values.Length - 1, 1);
                 }
                 else
                 {
                     var isLastRow = insertQueryParameters.DataToInsert.Count == index + 1;
-                    values.Replace(",", isLastRow ? ")" : ")," , values.Length - 1, 1);
+                    values.Replace(",", isLastRow ? ")" : "),", values.Length - 1, 1);
                 }
             }
 
@@ -120,6 +121,82 @@ namespace headlessCMS.Services
                                                                    OUTPUT deleted.Id
                                                                    WHERE {conditions};", parameters);
         }
+
+        public async Task<List<dynamic>> ExecuteSelectQueryOnDataCollectionAsync(SelectQueryParametersDataCollection selectQueryParameters)
+        {
+            if (! await CheckIfCollectionsAndColumnsExistsInDatabase(selectQueryParameters.FieldsFilters)) return new List<dynamic>();
+
+            var filtersString = MakeFilterQueryPart(selectQueryParameters.FieldsFilters);
+            return new List<dynamic>();
+        }
+
+        private async Task<bool> CheckIfCollectionsAndColumnsExistsInDatabase(List<SelectFiltersField> fieldsFilters)
+        {
+            // TODO: check data also from join and select
+
+            var collectionWithColumnsNames = fieldsFilters
+                                                .GroupBy(field => field.CollectionName,
+                                                        field => field.FieldName)
+                                                .Select(groupedFields => new CollectionWithColumnsNames()
+                                                {
+                                                    CollectionName = groupedFields.Key,
+                                                    ColumnsNames = groupedFields.ToList()
+                                                });
+
+
+            foreach (var collection in collectionWithColumnsNames)
+            {
+                var collectionFromDB = await GetCollectionFieldsByCollectionNameAsync(collection.CollectionName);
+
+                if (collectionFromDB == null) return false;
+
+                var fieldsNamesFromDB = collectionFromDB.Select(field => field.Name).ToList();
+
+                var areAllColumnsExistInDb = collection.ColumnsNames.All(fieldName => fieldsNamesFromDB.Contains(fieldName));
+
+                if (!areAllColumnsExistInDb) return false;
+            }
+
+            return true;
+        }
+
+        private string PrepareOperationSign(string? previousOperation, string currentOperation)
+        {
+            if (previousOperation == null) return "(";
+
+            return currentOperation switch
+            {
+                LogicalOperations.AND => LogicalOperations.AND,
+                LogicalOperations.OR => $") {LogicalOperations.OR} (",
+                _ => string.Empty,
+            };
+        }
+
+        private string MakeFilterQueryPart(List<SelectFiltersField> fieldsFilters)
+        {
+            var query = new StringBuilder("WHERE ");
+            var parameters = new DynamicParameters();
+            string? previousOperation = null;
+
+            foreach (var field in fieldsFilters)
+            {
+                foreach (var filter in field.Filters)
+                {
+                    var collectionAndFieldName = $"{field.CollectionName}.{field.FieldName}";
+                    var filterSign = SelectFiltersMapper.MapFilterToSign[filter.Type];
+
+                    var operationSign = PrepareOperationSign(previousOperation, field.Operation);
+                    if (operationSign == string.Empty) return string.Empty; // TO DO: Think how to handle that 
+
+                    query.Append($" {operationSign} {collectionAndFieldName} {filterSign} @{collectionAndFieldName}");
+                    parameters.Add($"@{collectionAndFieldName}", filter.Value);
+                }
+                previousOperation = field.Operation;
+            }
+
+            return query.Append(')').ToString();
+        }
+
 
         private async Task<IEnumerable<CollectionField>> GetCollectionFieldsByCollectionNameAsync(string collectionName)
         {

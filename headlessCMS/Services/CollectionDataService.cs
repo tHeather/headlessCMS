@@ -160,11 +160,9 @@ namespace headlessCMS.Services
             transactionScope.Complete();
         }
 
-        public async Task<IEnumerable<dynamic>> GetData(string collectionName, DataState dataDtate)
+        public async Task<List<dynamic>> GetData(SelectQueryParametersDataCollection selectQueryParametersDataCollection)
         {
-            return await _dbConnection.QueryAsync(@$"SELECT * 
-                                                     FROM {collectionName} 
-                                                     WHERE  {DataCollectionReservedFields.DATA_STATE} = {(int)dataDtate};");
+            return await _sqlService.ExecuteSelectQueryOnDataCollectionAsync(selectQueryParametersDataCollection);
         }
 
         public async Task DeleteDataAsync(DeleteData deleteData)

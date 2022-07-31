@@ -1,4 +1,5 @@
 ﻿using headlessCMS.Enums;
+using headlessCMS.Models.Services;
 using headlessCMS.Models.ValueObjects;
 
 namespace headlessCMS.Services.Interfaces
@@ -8,7 +9,7 @@ namespace headlessCMS.Services.Interfaces
         public Task<Guid> SaveDraftAsync(InsertData insertData);
         public Task<Guid> PublishDataAsync(Guid draftId, string collectionName);
         public Task SaveDraftAndPublishDataAsync(InsertData insertData);
-        public Task<IEnumerable<dynamic>> GetData(string collectionName, DataState dataDtate);
+        public Task<List<dynamic>> GetData(SelectQueryParametersDataCollection selectQueryParametersDataCollection);
         public Task DeleteDataAsync(DeleteData deleteData);
         public Task UpdateDraftAsync(UpdateData updateData);
         public Task UpdateDraftAndPublishDataAsync(UpdateData updateData);

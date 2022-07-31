@@ -3,6 +3,7 @@ using headlessCMS.Models.Shared;
 using headlessCMS.Models.ValueObjects;
 using headlessCMS.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using headlessCMS.Models.Services;
 
 namespace headlessCMS.Controllers
 {
@@ -17,10 +18,10 @@ namespace headlessCMS.Controllers
             _collectionDataService = collectionDataService;
         }
 
-        [HttpGet("{collectionName}")]
-        public async Task<IActionResult> GetDataAsync(string collectionName, DataState dataState)
+        [HttpPost("getdata")]
+        public async Task<IActionResult> GetDataAsync([FromBody] SelectQueryParametersDataCollection selectQueryParametersDataCollection)
         {
-            var data = await _collectionDataService.GetData(collectionName, dataState);
+            var data = await _collectionDataService.GetData(selectQueryParametersDataCollection);
 
             return Ok(data);
         }
