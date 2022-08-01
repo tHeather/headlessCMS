@@ -1,4 +1,4 @@
-﻿namespace headlessCMS.Constants
+﻿namespace headlessCMS.Constants.TablesMetadata
 {
     public class CollectionFieldsTableFields
     {
@@ -8,8 +8,8 @@
 
         public const string TYPE = "type";
 
-        public static readonly List<string> ReserveFieldsList = new (){
-            COLLECTION_NAME, NAME, TYPE 
+        public static readonly List<string> ReserveFieldsList = new(){
+            COLLECTION_NAME, NAME, TYPE
         };
     }
 }

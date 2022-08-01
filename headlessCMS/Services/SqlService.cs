@@ -1,5 +1,6 @@
 ﻿using Dapper;
 using headlessCMS.Constants;
+using headlessCMS.Constants.TablesMetadata;
 using headlessCMS.Dictionary;
 using headlessCMS.Mappers;
 using headlessCMS.Models.Models;
@@ -125,10 +126,14 @@ namespace headlessCMS.Services
 
         public async Task<List<dynamic>> ExecuteSelectQueryOnDataCollectionAsync(SelectQueryParametersDataCollection selectQueryParameters)
         {
-            if (! await CheckIfCollectionsAndColumnsExistsInDatabase(selectQueryParameters.FieldsFilters)) return new List<dynamic>();
-
+            if (!await CheckIfCollectionsAndColumnsExistsInDatabase(selectQueryParameters.FieldsFilters, selectQueryParameters.SelctedFields)) 
+            {
+                return new List<dynamic>();
+            }
+            
             var selectedFields = MakeSelectedFieldsQueryPart(selectQueryParameters.SelctedFields);
             var filtersString = MakeFilterQueryPart(selectQueryParameters.FieldsFilters);
+
             return new List<dynamic>();
         }
 
@@ -146,11 +151,21 @@ namespace headlessCMS.Services
             return query.ToString();
         }
 
-        private async Task<bool> CheckIfCollectionsAndColumnsExistsInDatabase(List<SelectFiltersField> fieldsFilters)
+        private async Task<bool> CheckIfCollectionsAndColumnsExistsInDatabase(
+            List<SelectFiltersField> fieldsFilters, List<SelectSelectedField> selctedFields)
         {
-            // TODO: check data also from join and select
+            // TODO: check data also from join
 
-            var collectionWithColumnsNames = fieldsFilters
+            var mappedFieldsFilters = fieldsFilters.Select(field => new SelectSelectedField
+            {
+                CollectionName = field.CollectionName,
+                FieldName = field.FieldName
+            });
+
+            selctedFields.AddRange(mappedFieldsFilters);
+
+            var collectionWithColumnsNames = selctedFields
+                                                .Distinct()
                                                 .GroupBy(field => field.CollectionName,
                                                         field => field.FieldName)
                                                 .Select(groupedFields => new CollectionWithColumnsNames()
@@ -168,7 +183,7 @@ namespace headlessCMS.Services
 
                 var fieldsNamesFromDB = collectionFromDB.Select(field => field.Name).ToList();
 
-                var areAllColumnsExistInDb = collection.ColumnsNames.All(fieldName => fieldsNamesFromDB.Contains(fieldName));
+                var areAllColumnsExistInDb = collection.ColumnsNames.All(fieldName => fieldsNamesFromDB.Contains(fieldName, StringComparer.OrdinalIgnoreCase));
 
                 if (!areAllColumnsExistInDb) return false;
             }

@@ -1,4 +1,4 @@
-﻿namespace headlessCMS.Constants
+﻿namespace headlessCMS.Constants.TablesMetadata
 {
     public class DataCollectionReservedFields
     {
@@ -8,5 +8,9 @@
 
         public const string PUBLISHED_VERSION_ID = "publishedVersionId";
 
+        public static readonly List<string> ReservedColumns= new()
+        {
+            ID, DATA_STATE, PUBLISHED_VERSION_ID
+        };
     }
 }

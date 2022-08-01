@@ -1,18 +1,18 @@
-﻿using headlessCMS.Services.Interfaces;
+﻿using Dapper;
+using headlessCMS.Constants.TablesMetadata;
 using headlessCMS.Dictionary;
-using System.Text;
-using Dapper;
-using System.Data.SqlClient;
-using System.Transactions;
 using headlessCMS.Models.Models;
-using headlessCMS.Models.ValueObjects;
-using headlessCMS.Constants;
 using headlessCMS.Models.Services;
 using headlessCMS.Models.Shared;
+using headlessCMS.Models.ValueObjects;
+using headlessCMS.Services.Interfaces;
+using System.Data.SqlClient;
+using System.Text;
+using System.Transactions;
 
 namespace headlessCMS.Services
 {
-    public class CollectionMetadataService: ICollectionMetadataService
+    public class CollectionMetadataService : ICollectionMetadataService
     {
 
         private readonly SqlConnection _dbConnection;
@@ -27,7 +27,7 @@ namespace headlessCMS.Services
         public async Task CreateCollectionAsync(CreateCollection createCollection)
         {
             using var transactionScope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled);
-            var mappedFieldsAndTypes = new Dictionary<string,string>();
+            var mappedFieldsAndTypes = new Dictionary<string, string>();
 
             var query = new StringBuilder(
             @$"CREATE TABLE {createCollection.Name} 
@@ -39,7 +39,7 @@ namespace headlessCMS.Services
             foreach (var field in createCollection.Fields)
             {
                 var mappedFieldType = DataTypesMapper.MapToDatabaseType[field.FieldType.ToUpper()];
-                var nullability  = field.IsRequierd ? "NOT NULL":"";
+                var nullability = field.IsRequierd ? "NOT NULL" : "";
                 query.Append($"{field.Name} {mappedFieldType} {nullability},");
                 mappedFieldsAndTypes.Add(field.Name, mappedFieldType);
             }
@@ -55,24 +55,25 @@ namespace headlessCMS.Services
 
         public async Task<IEnumerable<string>> GetCollectionsNames()
         {
-          return await _dbConnection.QueryAsync<string>("SELECT collectionName FROM collections");
+            return await _dbConnection.QueryAsync<string>("SELECT collectionName FROM collections");
         }
 
         private async Task AddCollectionAsync(string collectionName)
         {
-            var insertQueryParametersMetadataCollection = new InsertQueryParametersMetadataCollection() {
+            var insertQueryParametersMetadataCollection = new InsertQueryParametersMetadataCollection()
+            {
                 CollectionName = ReservedTables.COLLECTIONS,
                 DataToInsert = new List<List<ColumnWithValue>>()
                 {
-                    new List<ColumnWithValue>() 
-                    { 
+                    new List<ColumnWithValue>()
+                    {
                         new ColumnWithValue
                         {
                             Name = CollectionsTableFields.COLLECTION_NAME,
                             Value = collectionName
-                        } 
+                        }
                     }
-                } 
+                }
             };
 
             await _sqlService.ExecuteInsertQueryOnMetadataCollectionAsync(insertQueryParametersMetadataCollection);
@@ -80,7 +81,7 @@ namespace headlessCMS.Services
 
         private async Task AddCollectionFieldsAsync(string collectionName, Dictionary<string, string> mappedFieldsAndTypes)
         {
-          var rows = mappedFieldsAndTypes.Select(field => new List<ColumnWithValue>()
+            var rows = mappedFieldsAndTypes.Select(field => new List<ColumnWithValue>()
             {
                 new ColumnWithValue()
                 {
@@ -98,7 +99,7 @@ namespace headlessCMS.Services
                     Value = field.Value
                 }
             }
-            );
+              );
 
             var insertQueryParametersMetadataCollection = new InsertQueryParametersMetadataCollection()
             {

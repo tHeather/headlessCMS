@@ -1,4 +1,4 @@
-﻿namespace headlessCMS.Constants
+﻿namespace headlessCMS.Constants.TablesMetadata
 {
     public class CollectionsTableFields
     {

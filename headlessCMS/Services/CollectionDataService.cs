@@ -1,5 +1,5 @@
 ﻿using Dapper;
-using headlessCMS.Constants;
+using headlessCMS.Constants.TablesMetadata;
 using headlessCMS.Enums;
 using headlessCMS.Mappers;
 using headlessCMS.Models.Services;
