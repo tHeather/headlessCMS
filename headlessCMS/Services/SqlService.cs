@@ -126,18 +126,23 @@ namespace headlessCMS.Services
 
         public async Task<List<dynamic>> ExecuteSelectQueryOnDataCollectionAsync(SelectQueryParametersDataCollection selectQueryParameters)
         {
-            if (!await CheckIfCollectionsAndColumnsExistsInDatabase(selectQueryParameters.FieldsFilters, selectQueryParameters.SelctedFields)) 
+            if (!await CheckIfCollectionsAndColumnsExistsInDatabase(selectQueryParameters.FieldsFilters, selectQueryParameters.SelctedFields))
             {
                 return new List<dynamic>();
             }
-            
-            var selectedFields = MakeSelectedFieldsQueryPart(selectQueryParameters.SelctedFields);
-            var filtersString = MakeFilterQueryPart(selectQueryParameters.FieldsFilters);
+
+            var query = new StringBuilder();
+
+            var selectedFieldsQuery = MakeSelectedFieldsQueryPart(selectQueryParameters.SelctedFields);
+            query.Append(selectedFieldsQuery);
+
+            var filterQueryAndParameters = MakeFilterQueryPart(selectQueryParameters.FieldsFilters);
+            query.Append(filterQueryAndParameters.Query);
 
             return new List<dynamic>();
         }
 
-        private string MakeSelectedFieldsQueryPart(List<SelectSelectedField> selctedFields)
+        private StringBuilder MakeSelectedFieldsQueryPart(List<SelectSelectedField> selctedFields)
         {
             var query = new StringBuilder("SELECT ");
 
@@ -148,7 +153,7 @@ namespace headlessCMS.Services
 
             query.Remove(query.Length - 2, 2);
 
-            return query.ToString();
+            return query;
         }
 
         private async Task<bool> CheckIfCollectionsAndColumnsExistsInDatabase(
@@ -199,11 +204,11 @@ namespace headlessCMS.Services
             {
                 LogicalOperations.AND => LogicalOperations.AND,
                 LogicalOperations.OR => $") {LogicalOperations.OR} (",
-                _ => string.Empty,
+                _ => throw new Exception("Unknown operation"),
             };
         }
 
-        private string MakeFilterQueryPart(List<SelectFiltersField> fieldsFilters)
+        private QueryAndParameters MakeFilterQueryPart(List<SelectFiltersField> fieldsFilters)
         {
             var query = new StringBuilder("WHERE ");
             var parameters = new DynamicParameters();
@@ -213,19 +218,24 @@ namespace headlessCMS.Services
             {
                 foreach (var filter in field.Filters)
                 {
-                    var collectionAndFieldName = $"{field.CollectionName}.{field.FieldName}";
+                    var operationSign = PrepareOperationSign(previousOperation, field.Operation);
                     var filterSign = SelectFiltersMapper.MapFilterToSign[filter.Type];
 
-                    var operationSign = PrepareOperationSign(previousOperation, field.Operation);
-                    if (operationSign == string.Empty) return string.Empty;
+                    var parameterName = Guid.NewGuid();
 
-                    query.Append($" {operationSign} {collectionAndFieldName} {filterSign} @{collectionAndFieldName}");
-                    parameters.Add($"@{collectionAndFieldName}", filter.Value);
+                    query.Append($" {operationSign} {field.CollectionName}.{field.FieldName} {filterSign} @{parameterName}");
+                    parameters.Add($"@{parameterName}", filter.Value);
                 }
                 previousOperation = field.Operation;
             }
 
-            return query.Append(')').ToString();
+            query.Append(')');
+
+            return new QueryAndParameters
+            {
+                Query = query,
+                Parameters = parameters,
+            };
         }
 
 
