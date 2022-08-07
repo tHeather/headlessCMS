@@ -126,7 +126,12 @@ namespace headlessCMS.Services
 
         public async Task<List<dynamic>> ExecuteSelectQueryOnDataCollectionAsync(SelectQueryParametersDataCollection selectQueryParameters)
         {
-            if (!await CheckIfCollectionsAndColumnsExistsInDatabase(selectQueryParameters.FieldsFilters, selectQueryParameters.SelctedFields))
+            var areCollectionsAndFieldsExistInDatabase = await CheckIfCollectionsAndColumnsExistInDatabase(selectQueryParameters.FieldsFilters, 
+                                                                                                           selectQueryParameters.SelctedFields, 
+                                                                                                           selectQueryParameters.Joins,
+                                                                                                           selectQueryParameters.From);
+
+            if (!areCollectionsAndFieldsExistInDatabase)
             {
                 return new List<dynamic>();
             }
@@ -136,13 +141,37 @@ namespace headlessCMS.Services
             var selectedFieldsQuery = MakeSelectedFieldsQueryPart(selectQueryParameters.SelctedFields);
             query.Append(selectedFieldsQuery);
 
+            var fromQuery = MakeFromQueryPart(selectQueryParameters.From);
+            query.Append(fromQuery);
+
+            var joinQuery = MakeJoinQueryPart(selectQueryParameters.Joins);
+            query.Append(joinQuery);
+
             var filterQueryAndParameters = MakeFilterQueryPart(selectQueryParameters.FieldsFilters);
             query.Append(filterQueryAndParameters.Query);
 
             return new List<dynamic>();
         }
 
-        private StringBuilder MakeSelectedFieldsQueryPart(List<SelectSelectedField> selctedFields)
+        private StringBuilder MakeFromQueryPart(string collectionName)
+        {
+            return new StringBuilder($" FROM {collectionName} ");
+        }
+
+        private StringBuilder MakeJoinQueryPart(List<SelectQueryJoin> joins)
+        {
+            var query = new StringBuilder(" ");
+
+            foreach (var join in joins)
+            {
+                if (!JoinTypes.JoinTypesList.Contains(join.Type, StringComparer.OrdinalIgnoreCase)) continue;
+                query.Append($" {join.Type} JOIN {join.RightCollectionName} ON {join.LeftCollectionName}.{join.LeftOnField} = {join.RightCollectionName}.{join.RightOnField}");
+            }
+
+            return query;
+        }
+
+        private StringBuilder MakeSelectedFieldsQueryPart(List<SelectQuerySelectedField> selctedFields)
         {
             var query = new StringBuilder("SELECT ");
 
@@ -156,31 +185,65 @@ namespace headlessCMS.Services
             return query;
         }
 
-        private async Task<bool> CheckIfCollectionsAndColumnsExistsInDatabase(
-            List<SelectFiltersField> fieldsFilters, List<SelectSelectedField> selctedFields)
+        private async Task<bool> CheckIfCollectionsAndColumnsExistInDatabase(
+            List<SelectFiltersField> fieldsFilters,
+            List<SelectQuerySelectedField> selctedFields,
+            List<SelectQueryJoin> joins,
+            string fromCollectionName)
         {
-            // TODO: check data also from join
+            var collectionAndFieldsToCheck = new List<CollectionAndField>();
 
-            var mappedFieldsFilters = fieldsFilters.Select(field => new SelectSelectedField
+            var mappedJoins = joins.SelectMany(join => new List<CollectionAndField>
+            {
+                new CollectionAndField
+                {
+                    CollectionName = join.LeftCollectionName,
+                    FieldName = join.LeftOnField
+                },
+                new CollectionAndField
+                {
+                    CollectionName = join.RightCollectionName,
+                    FieldName = join.RightOnField
+                }
+
+            });
+
+            collectionAndFieldsToCheck.AddRange(mappedJoins);
+
+            var mappedSelectedFields = selctedFields.Select(field => new CollectionAndField
+            {
+                FieldName = field.FieldName,
+                CollectionName = field.CollectionName
+            });
+
+            collectionAndFieldsToCheck.AddRange(mappedSelectedFields);
+
+            var mappedFieldsFilters = fieldsFilters.Select(field => new CollectionAndField
             {
                 CollectionName = field.CollectionName,
                 FieldName = field.FieldName
             });
 
-            selctedFields.AddRange(mappedFieldsFilters);
+            collectionAndFieldsToCheck.AddRange(mappedFieldsFilters);
 
-            var collectionWithColumnsNames = selctedFields
-                                                .Distinct()
-                                                .GroupBy(field => field.CollectionName,
-                                                        field => field.FieldName)
-                                                .Select(groupedFields => new CollectionWithColumnsNames()
-                                                {
-                                                    CollectionName = groupedFields.Key,
-                                                    ColumnsNames = groupedFields.ToList()
-                                                });
+            collectionAndFieldsToCheck.Add(new CollectionAndField
+            {
+                CollectionName = fromCollectionName,
+                FieldName = string.Empty
+            });
+
+            var collectionAndFieldsToCheckGrouped = collectionAndFieldsToCheck
+                                                        .Distinct()
+                                                        .GroupBy(field => field.CollectionName,
+                                                                field => field.FieldName)
+                                                        .Select(groupedFields => new CollectionWithColumnsNames()
+                                                        {
+                                                            CollectionName = groupedFields.Key,
+                                                            ColumnsNames = groupedFields.ToList()
+                                                        });
 
 
-            foreach (var collection in collectionWithColumnsNames)
+            foreach (var collection in collectionAndFieldsToCheckGrouped)
             {
                 var collectionFromDB = await GetCollectionFieldsByCollectionNameAsync(collection.CollectionName);
 
@@ -188,9 +251,15 @@ namespace headlessCMS.Services
 
                 var fieldsNamesFromDB = collectionFromDB.Select(field => field.Name).ToList();
 
-                var areAllColumnsExistInDb = collection.ColumnsNames.All(fieldName => fieldsNamesFromDB.Contains(fieldName, StringComparer.OrdinalIgnoreCase));
+                var areAllFieldsExistInDbOrInReservedFields = collection.ColumnsNames.All(fieldName => 
+                {
+                    if (fieldName == string.Empty) return true;
 
-                if (!areAllColumnsExistInDb) return false;
+                    return DataCollectionReservedFields.ReservedFields.Contains(fieldName, StringComparer.OrdinalIgnoreCase) ||
+                    fieldsNamesFromDB.Contains(fieldName, StringComparer.OrdinalIgnoreCase);
+                });
+ 
+                if (!areAllFieldsExistInDbOrInReservedFields) return false;
             }
 
             return true;
@@ -210,7 +279,7 @@ namespace headlessCMS.Services
 
         private QueryAndParameters MakeFilterQueryPart(List<SelectFiltersField> fieldsFilters)
         {
-            var query = new StringBuilder("WHERE ");
+            var query = new StringBuilder(" WHERE ");
             var parameters = new DynamicParameters();
             string? previousOperation = null;
 

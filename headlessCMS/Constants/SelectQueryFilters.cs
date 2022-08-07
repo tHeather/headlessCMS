@@ -1,6 +1,6 @@
 ﻿namespace headlessCMS.Constants
 {
-    public class SelectFilters
+    public class SelectQueryFilters
     {
         public const string EQUAL = "eq";
 

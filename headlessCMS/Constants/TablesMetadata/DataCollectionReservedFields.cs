@@ -8,7 +8,7 @@
 
         public const string PUBLISHED_VERSION_ID = "publishedVersionId";
 
-        public static readonly List<string> ReservedColumns= new()
+        public static readonly List<string> ReservedFields= new()
         {
             ID, DATA_STATE, PUBLISHED_VERSION_ID
         };

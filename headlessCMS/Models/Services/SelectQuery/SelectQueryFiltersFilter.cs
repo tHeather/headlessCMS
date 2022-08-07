@@ -1,6 +1,6 @@
 ﻿namespace headlessCMS.Models.Services.Select
 {
-    public class SelectFiltersFilter
+    public class SelectQueryFiltersFilter
     {
         public string Type { get; set; }
 

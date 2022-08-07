@@ -1,6 +1,6 @@
 ﻿namespace headlessCMS.Models.Services.Select
 {
-    public class SelectSelectedField
+    public class SelectQuerySelectedField
     {
         public string CollectionName { get; set; }
 

@@ -8,6 +8,6 @@
 
         public string Operation { get; set; }
 
-        public List<SelectFiltersFilter> Filters { get; set; }
+        public List<SelectQueryFiltersFilter> Filters { get; set; }
     }
 }
