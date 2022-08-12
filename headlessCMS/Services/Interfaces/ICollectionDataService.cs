@@ -1,5 +1,5 @@
 ﻿using headlessCMS.Enums;
-using headlessCMS.Models.Services.Select;
+using headlessCMS.Models.Services.SelectQuery;
 using headlessCMS.Models.ValueObjects;
 
 namespace headlessCMS.Services.Interfaces

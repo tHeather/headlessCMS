@@ -1,4 +1,4 @@
-﻿namespace headlessCMS.Models.Services.Select
+﻿namespace headlessCMS.Models.Services.SelectQuery
 {
     public class SelectFiltersField
     {

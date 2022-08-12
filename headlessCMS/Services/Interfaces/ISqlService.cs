@@ -1,5 +1,5 @@
 ﻿using headlessCMS.Models.Services;
-using headlessCMS.Models.Services.Select;
+using headlessCMS.Models.Services.SelectQuery;
 
 namespace headlessCMS.Services.Interfaces
 {

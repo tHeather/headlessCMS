@@ -3,7 +3,7 @@ using headlessCMS.Constants.TablesMetadata;
 using headlessCMS.Enums;
 using headlessCMS.Mappers;
 using headlessCMS.Models.Services;
-using headlessCMS.Models.Services.Select;
+using headlessCMS.Models.Services.SelectQuery;
 using headlessCMS.Models.ValueObjects;
 using headlessCMS.Services.Interfaces;
 using headlessCMS.Tools;

@@ -1,4 +1,4 @@
-﻿namespace headlessCMS.Models.Services.Select
+﻿namespace headlessCMS.Models.Services.SelectQuery
 {
     public class SelectQueryParametersDataCollection
     {
@@ -9,5 +9,7 @@
         public List<SelectQueryJoin> Joins { get; set; }
 
         public List<SelectFiltersField> FieldsFilters { get; set; }
+
+        public List<SelectQueryOrder> Orders { get; set; }
     }
 }

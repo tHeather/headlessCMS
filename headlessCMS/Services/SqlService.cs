@@ -5,7 +5,7 @@ using headlessCMS.Dictionary;
 using headlessCMS.Mappers;
 using headlessCMS.Models.Models;
 using headlessCMS.Models.Services;
-using headlessCMS.Models.Services.Select;
+using headlessCMS.Models.Services.SelectQuery;
 using headlessCMS.Services.Interfaces;
 using System.Data;
 using System.Data.SqlClient;
@@ -126,10 +126,14 @@ namespace headlessCMS.Services
 
         public async Task<List<dynamic>> ExecuteSelectQueryOnDataCollectionAsync(SelectQueryParametersDataCollection selectQueryParameters)
         {
-            var areCollectionsAndFieldsExistInDatabase = await CheckIfCollectionsAndColumnsExistInDatabase(selectQueryParameters.FieldsFilters, 
-                                                                                                           selectQueryParameters.SelctedFields, 
-                                                                                                           selectQueryParameters.Joins,
-                                                                                                           selectQueryParameters.From);
+            var areCollectionsAndFieldsExistInDatabase = await CheckIfCollectionsAndColumnsExistInDatabase
+                                                               (
+                                                                 selectQueryParameters.FieldsFilters,
+                                                                 selectQueryParameters.SelctedFields,
+                                                                 selectQueryParameters.Joins,
+                                                                 selectQueryParameters.From,
+                                                                 selectQueryParameters.Orders
+                                                               );
 
             if (!areCollectionsAndFieldsExistInDatabase)
             {
@@ -150,7 +154,25 @@ namespace headlessCMS.Services
             var filterQueryAndParameters = MakeFilterQueryPart(selectQueryParameters.FieldsFilters);
             query.Append(filterQueryAndParameters.Query);
 
+            var orderQuery = MakeOrderQueryPart(selectQueryParameters.Orders);
+            query.Append(orderQuery);
+
             return new List<dynamic>();
+        }
+
+        private StringBuilder MakeOrderQueryPart(List<SelectQueryOrder> orders)
+        {
+            var query = new StringBuilder(" ORDER BY");
+
+            foreach (var order in orders)
+            {
+                if (!OrderTypes.OrderTypesList.Contains(order.Type, StringComparer.OrdinalIgnoreCase)) continue;
+                query.Append($" {order.CollectionName}.{order.FieldName} {order.Type},");
+            }
+
+            query.Remove(query.Length - 1, 1);
+
+            return query;
         }
 
         private StringBuilder MakeFromQueryPart(string collectionName)
@@ -189,7 +211,9 @@ namespace headlessCMS.Services
             List<SelectFiltersField> fieldsFilters,
             List<SelectQuerySelectedField> selctedFields,
             List<SelectQueryJoin> joins,
-            string fromCollectionName)
+            string fromCollectionName,
+            List<SelectQueryOrder> orders
+            )
         {
             var collectionAndFieldsToCheck = new List<CollectionAndField>();
 
@@ -207,7 +231,6 @@ namespace headlessCMS.Services
                 }
 
             });
-
             collectionAndFieldsToCheck.AddRange(mappedJoins);
 
             var mappedSelectedFields = selctedFields.Select(field => new CollectionAndField
@@ -215,7 +238,6 @@ namespace headlessCMS.Services
                 FieldName = field.FieldName,
                 CollectionName = field.CollectionName
             });
-
             collectionAndFieldsToCheck.AddRange(mappedSelectedFields);
 
             var mappedFieldsFilters = fieldsFilters.Select(field => new CollectionAndField
@@ -223,7 +245,6 @@ namespace headlessCMS.Services
                 CollectionName = field.CollectionName,
                 FieldName = field.FieldName
             });
-
             collectionAndFieldsToCheck.AddRange(mappedFieldsFilters);
 
             collectionAndFieldsToCheck.Add(new CollectionAndField
@@ -231,6 +252,13 @@ namespace headlessCMS.Services
                 CollectionName = fromCollectionName,
                 FieldName = string.Empty
             });
+
+            var mappeOrders = orders.Select(field => new CollectionAndField
+            {
+                CollectionName = field.CollectionName,
+                FieldName = field.FieldName
+            });
+            collectionAndFieldsToCheck.AddRange(mappeOrders);
 
             var collectionAndFieldsToCheckGrouped = collectionAndFieldsToCheck
                                                         .Distinct()

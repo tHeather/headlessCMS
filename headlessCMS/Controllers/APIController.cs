@@ -3,7 +3,7 @@ using headlessCMS.Models.Shared;
 using headlessCMS.Models.ValueObjects;
 using headlessCMS.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using headlessCMS.Models.Services.Select;
+using headlessCMS.Models.Services.SelectQuery;
 
 namespace headlessCMS.Controllers
 {
