@@ -10,6 +10,7 @@ using headlessCMS.Services.Interfaces;
 using System.Data;
 using System.Data.SqlClient;
 using System.Text;
+using Newtonsoft.Json;
 
 namespace headlessCMS.Services
 {
@@ -157,7 +158,8 @@ namespace headlessCMS.Services
             var orderQuery = MakeOrderQueryPart(selectQueryParameters.Orders);
             query.Append(orderQuery);
 
-            return new List<dynamic>();
+            var results = await _dbConnection.QueryAsync(query.ToString(), filterQueryAndParameters.Parameters);
+            return results.ToList();
         }
 
         private StringBuilder MakeOrderQueryPart(List<SelectQueryOrder> orders)
@@ -279,14 +281,14 @@ namespace headlessCMS.Services
 
                 var fieldsNamesFromDB = collectionFromDB.Select(field => field.Name).ToList();
 
-                var areAllFieldsExistInDbOrInReservedFields = collection.ColumnsNames.All(fieldName => 
+                var areAllFieldsExistInDbOrInReservedFields = collection.ColumnsNames.All(fieldName =>
                 {
                     if (fieldName == string.Empty) return true;
 
                     return DataCollectionReservedFields.ReservedFields.Contains(fieldName, StringComparer.OrdinalIgnoreCase) ||
                     fieldsNamesFromDB.Contains(fieldName, StringComparer.OrdinalIgnoreCase);
                 });
- 
+
                 if (!areAllFieldsExistInDbOrInReservedFields) return false;
             }
 
@@ -318,10 +320,19 @@ namespace headlessCMS.Services
                     var operationSign = PrepareOperationSign(previousOperation, field.Operation);
                     var filterSign = SelectFiltersMapper.MapFilterToSign[filter.Type];
 
-                    var parameterName = Guid.NewGuid();
+                    var parameterName = Guid.NewGuid().ToString("N");
 
-                    query.Append($" {operationSign} {field.CollectionName}.{field.FieldName} {filterSign} @{parameterName}");
-                    parameters.Add($"@{parameterName}", filter.Value);
+                    query.Append($" {operationSign} {field.CollectionName}.{field.FieldName} {filterSign} @{parameterName} ");
+
+                    if (filter.Type == SelectQueryFilters.IN || filter.Type == SelectQueryFilters.NOT_IN)
+                    {
+                       var value = JsonConvert.DeserializeObject<string[]>(filter.Value);
+                       parameters.Add(parameterName, value);
+                    }
+                    else
+                    {
+                        parameters.Add(parameterName, filter.Value);
+                    }
                 }
                 previousOperation = field.Operation;
             }
