@@ -158,21 +158,37 @@ namespace headlessCMS.Services
             var orderQuery = MakeOrderQueryPart(selectQueryParameters.Orders);
             query.Append(orderQuery);
 
+            var paginationQuery = MakePaginationQueryPart(selectQueryParameters.Pagination);
+            query.Append(paginationQuery);
+
             var results = await _dbConnection.QueryAsync(query.ToString(), filterQueryAndParameters.Parameters);
             return results.ToList();
+        }
+
+        private StringBuilder MakePaginationQueryPart(SelectQueryPagination pagination)
+        {
+            var rowsToskip = pagination.PageSize * pagination.PageNumber;
+            return new StringBuilder($" OFFSET {rowsToskip} ROWS FETCH NEXT {pagination.PageSize} ROWS ONLY");
         }
 
         private StringBuilder MakeOrderQueryPart(List<SelectQueryOrder> orders)
         {
             var query = new StringBuilder(" ORDER BY");
 
-            foreach (var order in orders)
+            if(orders == null || !orders.Any())
             {
-                if (!OrderTypes.OrderTypesList.Contains(order.Type, StringComparer.OrdinalIgnoreCase)) continue;
-                query.Append($" {order.CollectionName}.{order.FieldName} {order.Type},");
+                query.Append($" id");
             }
+            else
+            {
+                foreach (var order in orders)
+                {
+                    if (!OrderTypes.OrderTypesList.Contains(order.Type, StringComparer.OrdinalIgnoreCase)) continue;
+                    query.Append($" {order.CollectionName}.{order.FieldName} {order.Type},");
+                }
 
-            query.Remove(query.Length - 1, 1);
+                query.Remove(query.Length - 1, 1);
+            }
 
             return query;
         }

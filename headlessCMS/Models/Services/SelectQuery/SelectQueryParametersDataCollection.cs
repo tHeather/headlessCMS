@@ -11,5 +11,7 @@
         public List<SelectFiltersField> FieldsFilters { get; set; }
 
         public List<SelectQueryOrder> Orders { get; set; }
+
+        public SelectQueryPagination Pagination { get; set; }
     }
 }
