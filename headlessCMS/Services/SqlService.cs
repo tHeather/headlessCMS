@@ -283,7 +283,7 @@ namespace headlessCMS.Services
 
                 var areAllFieldsExistInDbOrInReservedFields = collection.ColumnsNames.All(fieldName =>
                 {
-                    if (fieldName == string.Empty) return true;
+                    if (fieldName == string.Empty || fieldName == SelectAllSign.SIGN) return true;
 
                     return DataCollectionReservedFields.ReservedFields.Contains(fieldName, StringComparer.OrdinalIgnoreCase) ||
                     fieldsNamesFromDB.Contains(fieldName, StringComparer.OrdinalIgnoreCase);
