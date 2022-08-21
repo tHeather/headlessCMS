@@ -142,6 +142,7 @@ namespace headlessCMS.Services
             }
 
             var query = new StringBuilder();
+            var parameters = new DynamicParameters();
 
             var selectedFieldsQuery = MakeSelectedFieldsQueryPart(selectQueryParameters.SelctedFields);
             query.Append(selectedFieldsQuery);
@@ -149,19 +150,29 @@ namespace headlessCMS.Services
             var fromQuery = MakeFromQueryPart(selectQueryParameters.From);
             query.Append(fromQuery);
 
-            var joinQuery = MakeJoinQueryPart(selectQueryParameters.Joins);
-            query.Append(joinQuery);
+            if (selectQueryParameters.Joins.Any())
+            {
+                var joinQuery = MakeJoinQueryPart(selectQueryParameters.Joins);
+                query.Append(joinQuery);
+            }
 
-            var filterQueryAndParameters = MakeFilterQueryPart(selectQueryParameters.FieldsFilters);
-            query.Append(filterQueryAndParameters.Query);
+            if (selectQueryParameters.FieldsFilters.Any())
+            {
+                var filterQueryAndParameters = MakeFilterQueryPart(selectQueryParameters.FieldsFilters);
+                query.Append(filterQueryAndParameters.Query);
+                parameters.AddDynamicParams(filterQueryAndParameters.Parameters);
+            }
 
             var orderQuery = MakeOrderQueryPart(selectQueryParameters.Orders);
             query.Append(orderQuery);
 
-            var paginationQuery = MakePaginationQueryPart(selectQueryParameters.Pagination);
-            query.Append(paginationQuery);
+            if(selectQueryParameters.Pagination != null)
+            {
+                var paginationQuery = MakePaginationQueryPart(selectQueryParameters.Pagination);
+                query.Append(paginationQuery);
+            }
 
-            var results = await _dbConnection.QueryAsync(query.ToString(), filterQueryAndParameters.Parameters);
+            var results = await _dbConnection.QueryAsync(query.ToString(), parameters);
             return results.ToList();
         }
 
@@ -175,11 +186,7 @@ namespace headlessCMS.Services
         {
             var query = new StringBuilder(" ORDER BY");
 
-            if(orders == null || !orders.Any())
-            {
-                query.Append($" id");
-            }
-            else
+            if(orders.Any())
             {
                 foreach (var order in orders)
                 {
@@ -188,6 +195,10 @@ namespace headlessCMS.Services
                 }
 
                 query.Remove(query.Length - 1, 1);
+            }
+            else
+            {
+                query.Append($" id");
             }
 
             return query;
@@ -215,12 +226,19 @@ namespace headlessCMS.Services
         {
             var query = new StringBuilder("SELECT ");
 
-            foreach (var field in selctedFields)
+            if (selctedFields.Any())
             {
-                query.Append($"{field.CollectionName}.{field.FieldName}, ");
-            }
+                foreach (var field in selctedFields)
+                {
+                    query.Append($"{field.CollectionName}.{field.FieldName}, ");
+                }
 
-            query.Remove(query.Length - 2, 2);
+                query.Remove(query.Length - 2, 2);
+            }
+            else
+            {
+                query.Append('*');
+            }
 
             return query;
         }
