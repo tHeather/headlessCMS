@@ -1,5 +1,4 @@
-﻿using headlessCMS.Enums;
-using headlessCMS.Models.Shared;
+﻿using headlessCMS.Models.Shared;
 using headlessCMS.Models.ValueObjects;
 using headlessCMS.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
@@ -19,7 +18,7 @@ namespace headlessCMS.Controllers
         }
 
         [HttpPost("getdata")]
-        public async Task<IActionResult> GetDataAsync([FromBody] SelectQueryParametersDataCollection selectQueryParametersDataCollection)
+        public async Task<IActionResult> GetDataAsync(SelectQueryParametersDataCollection selectQueryParametersDataCollection)
         {
             var data = await _collectionDataService.GetData(selectQueryParametersDataCollection);
 

@@ -1,6 +1,8 @@
 using System.Data.SqlClient;
+using headlessCMS.Models.Erros;
 using headlessCMS.Services;
 using headlessCMS.Services.Interfaces;
+using Microsoft.AspNetCore.Mvc;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,7 +13,14 @@ builder.Services.AddSingleton<SqlConnection>(
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddAuthorization();
-builder.Services.AddControllers();
+builder.Services.AddControllers().ConfigureApiBehaviorOptions(options =>
+{
+    options.InvalidModelStateResponseFactory = context =>
+    {
+        return new BadRequestObjectResult(new ValidationErrorsResponse(context.ModelState));
+    };
+}).AddNewtonsoftJson();
+
 builder.Services.AddScoped<ICollectionMetadataService, CollectionMetadataService>();
 builder.Services.AddScoped<ICollectionDataService, CollectionDataService>();
 builder.Services.AddScoped<ISqlService, SqlService>();

@@ -17,5 +17,11 @@
         public const string IN = "in";
 
         public const string NOT_IN = "nin";
+
+        public static readonly List<string> FilterTypesList = new()
+        {
+            EQUAL, NOT_EQUAL, GREATER_THAN, GREATER_THAN_OR_EQUAL,
+            LESS_THAN, LESS_THAN_OR_EQUAL, IN, NOT_IN
+        };
     }
 }
