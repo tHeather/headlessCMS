@@ -1,4 +1,5 @@
 ﻿using headlessCMS.Atributes;
+using headlessCMS.Constants;
 using System.ComponentModel.DataAnnotations;
 
 namespace headlessCMS.Models.Services.SelectQuery
@@ -11,9 +12,8 @@ namespace headlessCMS.Models.Services.SelectQuery
         [Required]
         public string FieldName { get; set; }
 
-        [Required]
         [LogicalOperationValidation]
-        public string Operation { get; set; }
+        public string Operation { get; set; } = LogicalOperations.AND;
 
         [Required]
         public List<SelectQueryFiltersFilter> Filters { get; set; }
