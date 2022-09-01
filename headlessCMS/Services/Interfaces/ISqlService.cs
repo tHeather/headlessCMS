@@ -1,16 +1,9 @@
-﻿using headlessCMS.Models.Services;
-using headlessCMS.Models.Services.SelectQuery;
+﻿using headlessCMS.Models.Models;
 
 namespace headlessCMS.Services.Interfaces
 {
     public interface ISqlService
     {
-        public Task<Guid> ExecuteInsertQueryOnDataCollectionAsync(InsertQueryParametersDataCollection insertQueryParameters);
-
-        public Task ExecuteInsertQueryOnMetadataCollectionAsync(InsertQueryParametersMetadataCollection insertQueryParameters);
-
-        public Task<Guid> ExecuteDeleteQueryOnDataCollectionAsync(DeleteQueryParametersDataCollection deleteQueryParameters);
-
-        public Task<List<dynamic>> ExecuteSelectQueryOnDataCollectionAsync(SelectQueryParametersDataCollection selectQueryParameters);
+        protected Task<IEnumerable<CollectionField>> GetCollectionFieldsByCollectionNameAsync(string collectionName);
     }
 }

@@ -12,21 +12,21 @@ using System.Transactions;
 
 namespace headlessCMS.Services
 {
-    public class CollectionDataService: ICollectionDataService
+    public class CollectionDataService
     {
         private readonly SqlConnection _dbConnection;
-        private readonly ICollectionMetadataService _collectionMetadataService;
-        private readonly ISqlService _sqlService;
+        private readonly CollectionMetadataService _collectionMetadataService;
+        private readonly ISqlApiService _sqlApiService;
 
         public CollectionDataService(
                 SqlConnection connection,
-                ICollectionMetadataService collectionMetadataService,
-                ISqlService sqlService
+                CollectionMetadataService collectionMetadataService,
+                ISqlApiService sqlApiService
             )
         {
             _dbConnection = connection;
             _collectionMetadataService = collectionMetadataService;
-            _sqlService = sqlService;
+            _sqlApiService = sqlApiService;
         }
 
         public async Task<Guid> SaveDraftAsync(InsertData insertData)
@@ -38,7 +38,7 @@ namespace headlessCMS.Services
                 DataToInsert = insertData.ColumnsWithValues
             };
 
-            var draftId = await _sqlService.ExecuteInsertQueryOnDataCollectionAsync(insertQueryParameters);
+            var draftId = await _sqlApiService.ExecuteInsertQueryAsync(insertQueryParameters);
 
             return draftId;
         }
@@ -48,7 +48,7 @@ namespace headlessCMS.Services
             using var transactionScope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled);
 
             Guid publishedDataId = Guid.Empty;
-            dynamic draftDynamic  = await _dbConnection
+            dynamic draftDynamic = await _dbConnection
                                                 .QueryFirstAsync(@$"SELECT * 
                                                                     FROM {collectionName} 
                                                                     WHERE id = '{draftId}' 
@@ -56,12 +56,12 @@ namespace headlessCMS.Services
 
             var draft = draftDynamic as IDictionary<string, object>;
 
-            if (draft == null) return publishedDataId; 
+            if (draft == null) return publishedDataId;
 
-            var columnsWithValues  = DynamicMapper.DynamicToColumnsWithValuesList(draftDynamic);
+            var columnsWithValues = DynamicMapper.DynamicToColumnsWithValuesList(draftDynamic);
             var collectionFields = await _collectionMetadataService.GetCollectionFieldsByCollectionNameAsync(collectionName);
 
-            if(draft[DataCollectionReservedFields.PUBLISHED_VERSION_ID] != null)
+            if (draft[DataCollectionReservedFields.PUBLISHED_VERSION_ID] != null)
             {
                 var values = SQLQueryMaker.MakeUpdateValuesString(collectionFields, columnsWithValues);
 
@@ -83,7 +83,7 @@ namespace headlessCMS.Services
                     DataToInsert = columnsWithValues
                 };
 
-                var publishedId = await _sqlService.ExecuteInsertQueryOnDataCollectionAsync(publishedInsertQueryParameters);
+                var publishedId = await _sqlApiService.ExecuteInsertQueryAsync(publishedInsertQueryParameters);
 
                 var draftQuery = @$"UPDATE {collectionName} 
                                     SET {DataCollectionReservedFields.PUBLISHED_VERSION_ID} = '{publishedId}' 
@@ -138,7 +138,7 @@ namespace headlessCMS.Services
         public async Task UnpublishDataAsync(Guid publishedVersionId, string collectionName)
         {
             using var transactionScope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled);
-      
+
             var deleteQueryParametersDataCollection = new DeleteQueryParametersDataCollection
             {
                 CollectionName = collectionName,
@@ -151,7 +151,7 @@ namespace headlessCMS.Services
                     }
                 }
             };
-            await _sqlService.ExecuteDeleteQueryOnDataCollectionAsync(deleteQueryParametersDataCollection);
+            await _sqlApiService.ExecuteDeleteQueryAsync(deleteQueryParametersDataCollection);
 
             await _dbConnection.QueryAsync(@$"UPDATE {collectionName} 
                                               SET {DataCollectionReservedFields.PUBLISHED_VERSION_ID} = NULL 
@@ -163,7 +163,7 @@ namespace headlessCMS.Services
 
         public async Task<List<dynamic>> GetData(SelectQueryParametersDataCollection selectQueryParametersDataCollection)
         {
-            return await _sqlService.ExecuteSelectQueryOnDataCollectionAsync(selectQueryParametersDataCollection);
+            return await _sqlApiService.ExecuteSelectQueryAsync(selectQueryParametersDataCollection);
         }
 
         public async Task DeleteDataAsync(DeleteData deleteData)
@@ -182,7 +182,7 @@ namespace headlessCMS.Services
                                                 AND {DataCollectionReservedFields.DATA_STATE} = {(int)DataState.Draft};");
 
 
-            if(publishedVersionId?[DataCollectionReservedFields.PUBLISHED_VERSION_ID] != null)
+            if (publishedVersionId?[DataCollectionReservedFields.PUBLISHED_VERSION_ID] != null)
             {
                 await _dbConnection.QueryAsync(@$"DELETE FROM {deleteData.CollectionName} 
                                                   WHERE Id = '{(Guid)publishedVersionId[DataCollectionReservedFields.PUBLISHED_VERSION_ID]}' 

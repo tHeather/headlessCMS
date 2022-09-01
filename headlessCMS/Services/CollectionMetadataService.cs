@@ -12,16 +12,16 @@ using System.Transactions;
 
 namespace headlessCMS.Services
 {
-    public class CollectionMetadataService : ICollectionMetadataService
+    public class CollectionMetadataService
     {
 
         private readonly SqlConnection _dbConnection;
-        private readonly ISqlService _sqlService;
+        private readonly ISqlCmsService _sqlCmsService;
 
-        public CollectionMetadataService(SqlConnection connection, ISqlService sqlService)
+        public CollectionMetadataService(SqlConnection connection, ISqlCmsService sqlCmsService)
         {
             _dbConnection = connection;
-            _sqlService = sqlService;
+            _sqlCmsService = sqlCmsService;
         }
 
         public async Task CreateCollectionAsync(CreateCollection createCollection)
@@ -76,7 +76,7 @@ namespace headlessCMS.Services
                 }
             };
 
-            await _sqlService.ExecuteInsertQueryOnMetadataCollectionAsync(insertQueryParametersMetadataCollection);
+            await _sqlCmsService.ExecuteInsertQueryAsync(insertQueryParametersMetadataCollection);
         }
 
         private async Task AddCollectionFieldsAsync(string collectionName, Dictionary<string, string> mappedFieldsAndTypes)
@@ -107,7 +107,7 @@ namespace headlessCMS.Services
                 DataToInsert = new List<List<ColumnWithValue>>(rows)
             };
 
-            await _sqlService.ExecuteInsertQueryOnMetadataCollectionAsync(insertQueryParametersMetadataCollection);
+            await _sqlCmsService.ExecuteInsertQueryAsync(insertQueryParametersMetadataCollection);
         }
 
         public async Task<IEnumerable<CollectionField>> GetCollectionFieldsByCollectionNameAsync(string collectionName)

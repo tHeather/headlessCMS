@@ -1,8 +1,8 @@
 ﻿using headlessCMS.Models.Shared;
 using headlessCMS.Models.ValueObjects;
-using headlessCMS.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using headlessCMS.Models.Services.SelectQuery;
+using headlessCMS.Services;
 
 namespace headlessCMS.Controllers
 {
@@ -10,9 +10,9 @@ namespace headlessCMS.Controllers
     [Route("[controller]")]
     public class APIController : ControllerBase
     {
-        private readonly ICollectionDataService _collectionDataService;
+        private readonly CollectionDataService _collectionDataService;
 
-        public APIController(ICollectionDataService collectionDataService)
+        public APIController(CollectionDataService collectionDataService)
         {
             _collectionDataService = collectionDataService;
         }

@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using headlessCMS.Models.DTOs;
-using headlessCMS.Services.Interfaces;
 using headlessCMS.Models.ValueObjects;
+using headlessCMS.Services;
 
 namespace headlessCMS.Controllers
 {
@@ -9,9 +9,9 @@ namespace headlessCMS.Controllers
     [Route("[controller]")]
     public class CollectionController : ControllerBase
     {
-        private readonly ICollectionMetadataService _collectionService;
+        private readonly CollectionMetadataService _collectionService;
 
-        public CollectionController(ICollectionMetadataService collectionService)
+        public CollectionController(CollectionMetadataService collectionService)
         {
             _collectionService = collectionService;
         }

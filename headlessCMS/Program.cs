@@ -21,9 +21,10 @@ builder.Services.AddControllers().ConfigureApiBehaviorOptions(options =>
     };
 }).AddNewtonsoftJson();
 
-builder.Services.AddScoped<ICollectionMetadataService, CollectionMetadataService>();
-builder.Services.AddScoped<ICollectionDataService, CollectionDataService>();
-builder.Services.AddScoped<ISqlService, SqlService>();
+builder.Services.AddScoped<ISqlApiService, SqlApiService>();
+builder.Services.AddScoped<ISqlCmsService, SqlCmsService>();
+builder.Services.AddScoped<CollectionMetadataService>();
+builder.Services.AddScoped<CollectionDataService>();
 
 var app = builder.Build();
 
