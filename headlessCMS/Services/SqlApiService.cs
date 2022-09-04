@@ -1,5 +1,4 @@
 ﻿using Dapper;
-using headlessCMS.Constants;
 using headlessCMS.Constants.TablesMetadata;
 using headlessCMS.Dictionary;
 using headlessCMS.Models.Services;
@@ -86,16 +85,9 @@ namespace headlessCMS.Services
 
         public async Task<List<dynamic>> ExecuteSelectQueryAsync(SelectQueryParametersDataCollection selectQueryParameters)
         {
-            var areCollectionsAndFieldsExistInDatabase = await CheckIfCollectionsAndColumnsExistInDatabase
-                                                               (
-                                                                 selectQueryParameters.FieldsFilters,
-                                                                 selectQueryParameters.SelctedFields,
-                                                                 selectQueryParameters.Joins,
-                                                                 selectQueryParameters.From,
-                                                                 selectQueryParameters.Orders
-                                                               );
+            var collectionsAndFields = GetCollectionsAndFieldsFromQueryParameters(selectQueryParameters);
 
-            if (!areCollectionsAndFieldsExistInDatabase)
+            if (! await AreCollectionsAndColumnsExistInDatabaseAsync(collectionsAndFields))
             {
                 return new List<dynamic>();
             }
@@ -135,17 +127,13 @@ namespace headlessCMS.Services
             return results.ToList();
         }
 
-        private async Task<bool> CheckIfCollectionsAndColumnsExistInDatabase(
-            List<SelectFiltersField> fieldsFilters,
-            List<SelectQuerySelectedField> selctedFields,
-            List<SelectQueryJoin> joins,
-            string fromCollectionName,
-            List<SelectQueryOrder> orders
+        private static IEnumerable<CollectionWithColumnsNames> GetCollectionsAndFieldsFromQueryParameters(
+                SelectQueryParametersDataCollection queryParameters
             )
         {
             var collectionAndFieldsToCheck = new List<CollectionAndField>();
 
-            var mappedJoins = joins.SelectMany(join => new List<CollectionAndField>
+            var mappedJoins = queryParameters.Joins.SelectMany(join => new List<CollectionAndField>
             {
                 new CollectionAndField
                 {
@@ -161,14 +149,14 @@ namespace headlessCMS.Services
             });
             collectionAndFieldsToCheck.AddRange(mappedJoins);
 
-            var mappedSelectedFields = selctedFields.Select(field => new CollectionAndField
+            var mappedSelectedFields = queryParameters.SelctedFields.Select(field => new CollectionAndField
             {
                 FieldName = field.FieldName,
                 CollectionName = field.CollectionName
             });
             collectionAndFieldsToCheck.AddRange(mappedSelectedFields);
 
-            var mappedFieldsFilters = fieldsFilters.Select(field => new CollectionAndField
+            var mappedFieldsFilters = queryParameters.FieldsFilters.Select(field => new CollectionAndField
             {
                 CollectionName = field.CollectionName,
                 FieldName = field.FieldName
@@ -177,48 +165,30 @@ namespace headlessCMS.Services
 
             collectionAndFieldsToCheck.Add(new CollectionAndField
             {
-                CollectionName = fromCollectionName,
+                CollectionName = queryParameters.From,
                 FieldName = string.Empty
             });
 
-            var mappeOrders = orders.Select(field => new CollectionAndField
+            var mappeOrders = queryParameters.Orders.Select(field => new CollectionAndField
             {
                 CollectionName = field.CollectionName,
                 FieldName = field.FieldName
             });
             collectionAndFieldsToCheck.AddRange(mappeOrders);
 
-            var collectionAndFieldsToCheckGrouped = collectionAndFieldsToCheck
-                                                        .Distinct()
-                                                        .GroupBy(field => field.CollectionName,
-                                                                field => field.FieldName)
-                                                        .Select(groupedFields => new CollectionWithColumnsNames()
-                                                        {
-                                                            CollectionName = groupedFields.Key,
-                                                            ColumnsNames = groupedFields.ToList()
-                                                        });
+            return collectionAndFieldsToCheck.Distinct()
+                                             .GroupBy
+                                             (
+                                               field => field.CollectionName,
+                                               field => field.FieldName
+                                             )
+                                             .Select(groupedFields => new CollectionWithColumnsNames()
+                                             {
+                                                CollectionName = groupedFields.Key,
+                                                ColumnsNames = groupedFields.ToList()
+                                             });
 
 
-            foreach (var collection in collectionAndFieldsToCheckGrouped)
-            {
-                var collectionFromDB = await GetCollectionFieldsByCollectionNameAsync(collection.CollectionName);
-
-                if (collectionFromDB == null) return false;
-
-                var fieldsNamesFromDB = collectionFromDB.Select(field => field.Name).ToList();
-
-                var areAllFieldsExistInDbOrInReservedFields = collection.ColumnsNames.All(fieldName =>
-                {
-                    if (fieldName == string.Empty || fieldName == SelectAllSign.SIGN) return true;
-
-                    return DataCollectionReservedFields.ReservedFields.Contains(fieldName, StringComparer.OrdinalIgnoreCase) ||
-                    fieldsNamesFromDB.Contains(fieldName, StringComparer.OrdinalIgnoreCase);
-                });
-
-                if (!areAllFieldsExistInDbOrInReservedFields) return false;
-            }
-
-            return true;
         }
     }
 }
