@@ -2,11 +2,10 @@
 using headlessCMS.Constants;
 using headlessCMS.Constants.TablesMetadata;
 using headlessCMS.Dictionary;
-using headlessCMS.Mappers;
 using headlessCMS.Models.Services;
 using headlessCMS.Models.Services.SelectQuery;
+using headlessCMS.QueryMakers;
 using headlessCMS.Services.Interfaces;
-using Newtonsoft.Json;
 using System.Data;
 using System.Data.SqlClient;
 using System.Text;
@@ -104,103 +103,36 @@ namespace headlessCMS.Services
             var query = new StringBuilder();
             var parameters = new DynamicParameters();
 
-            var selectedFieldsQuery = MakeSelectedFieldsQueryPart(selectQueryParameters.SelctedFields);
+            var selectedFieldsQuery = SqlApiQueryMaker.MakeSelectedFieldsPartForSelectQuery(selectQueryParameters.SelctedFields);
             query.Append(selectedFieldsQuery);
 
-            var fromQuery = MakeFromQueryPart(selectQueryParameters.From);
+            var fromQuery = SqlApiQueryMaker.MakeFromPartForSelectQuery(selectQueryParameters.From);
             query.Append(fromQuery);
 
             if (selectQueryParameters.Joins.Any())
             {
-                var joinQuery = MakeJoinQueryPart(selectQueryParameters.Joins);
+                var joinQuery = SqlApiQueryMaker.MakeJoinPartForSelectQuery(selectQueryParameters.Joins);
                 query.Append(joinQuery);
             }
 
             if (selectQueryParameters.FieldsFilters.Any())
             {
-                var filterQueryAndParameters = MakeFilterQueryPart(selectQueryParameters.FieldsFilters);
+                var filterQueryAndParameters = SqlApiQueryMaker.MakeFilterPartForSelectQuery(selectQueryParameters.FieldsFilters);
                 query.Append(filterQueryAndParameters.Query);
                 parameters.AddDynamicParams(filterQueryAndParameters.Parameters);
             }
 
-            var orderQuery = MakeOrderQueryPart(selectQueryParameters.Orders);
+            var orderQuery = SqlApiQueryMaker.MakeOrderPartForSelectQuery(selectQueryParameters.Orders);
             query.Append(orderQuery);
 
             if (selectQueryParameters.Pagination != null)
             {
-                var paginationQuery = MakePaginationQueryPart(selectQueryParameters.Pagination);
+                var paginationQuery = SqlApiQueryMaker.MakePaginationPartForSelectQuery(selectQueryParameters.Pagination);
                 query.Append(paginationQuery);
             }
 
             var results = await _dbConnection.QueryAsync(query.ToString(), parameters);
             return results.ToList();
-        }
-
-        private StringBuilder MakePaginationQueryPart(SelectQueryPagination pagination)
-        {
-            var rowsToskip = pagination.PageSize * pagination.PageNumber;
-            return new StringBuilder($" OFFSET {rowsToskip} ROWS FETCH NEXT {pagination.PageSize} ROWS ONLY");
-        }
-
-        private StringBuilder MakeOrderQueryPart(List<SelectQueryOrder> orders)
-        {
-            var query = new StringBuilder(" ORDER BY");
-
-            if (orders.Any())
-            {
-                foreach (var order in orders)
-                {
-                    if (!OrderTypes.OrderTypesList.Contains(order.Type, StringComparer.OrdinalIgnoreCase)) continue;
-                    query.Append($" {order.CollectionName}.{order.FieldName} {order.Type},");
-                }
-
-                query.Remove(query.Length - 1, 1);
-            }
-            else
-            {
-                query.Append($" id");
-            }
-
-            return query;
-        }
-
-        private StringBuilder MakeFromQueryPart(string collectionName)
-        {
-            return new StringBuilder($" FROM {collectionName} ");
-        }
-
-        private StringBuilder MakeJoinQueryPart(List<SelectQueryJoin> joins)
-        {
-            var query = new StringBuilder(" ");
-
-            foreach (var join in joins)
-            {
-                if (!JoinTypes.JoinTypesList.Contains(join.Type, StringComparer.OrdinalIgnoreCase)) continue;
-                query.Append($" {join.Type} JOIN {join.RightCollectionName} ON {join.LeftCollectionName}.{join.LeftOnField} = {join.RightCollectionName}.{join.RightOnField}");
-            }
-
-            return query;
-        }
-
-        private StringBuilder MakeSelectedFieldsQueryPart(List<SelectQuerySelectedField> selctedFields)
-        {
-            var query = new StringBuilder("SELECT ");
-
-            if (selctedFields.Any())
-            {
-                foreach (var field in selctedFields)
-                {
-                    query.Append($"{field.CollectionName}.{field.FieldName}, ");
-                }
-
-                query.Remove(query.Length - 2, 2);
-            }
-            else
-            {
-                query.Append('*');
-            }
-
-            return query;
         }
 
         private async Task<bool> CheckIfCollectionsAndColumnsExistInDatabase(
@@ -287,57 +219,6 @@ namespace headlessCMS.Services
             }
 
             return true;
-        }
-
-        private string PrepareOperationSign(string? previousOperation, string currentOperation)
-        {
-            if (previousOperation == null) return "(";
-
-            return currentOperation switch
-            {
-                LogicalOperations.AND => LogicalOperations.AND,
-                LogicalOperations.OR => $") {LogicalOperations.OR} (",
-                _ => throw new Exception("Unknown operation"),
-            };
-        }
-
-        private QueryAndParameters MakeFilterQueryPart(List<SelectFiltersField> fieldsFilters)
-        {
-            var query = new StringBuilder(" WHERE ");
-            var parameters = new DynamicParameters();
-            string? previousOperation = null;
-
-            foreach (var field in fieldsFilters)
-            {
-                foreach (var filter in field.Filters)
-                {
-                    var operationSign = PrepareOperationSign(previousOperation, field.Operation);
-                    var filterSign = SelectFiltersMapper.MapFilterToSign[filter.Type];
-
-                    var parameterName = Guid.NewGuid().ToString("N");
-
-                    query.Append($" {operationSign} {field.CollectionName}.{field.FieldName} {filterSign} @{parameterName} ");
-
-                    if (filter.Type == SelectQueryFilters.IN || filter.Type == SelectQueryFilters.NOT_IN)
-                    {
-                        var value = JsonConvert.DeserializeObject<string[]>(filter.Value);
-                        parameters.Add(parameterName, value);
-                    }
-                    else
-                    {
-                        parameters.Add(parameterName, filter.Value);
-                    }
-                }
-                previousOperation = field.Operation;
-            }
-
-            query.Append(')');
-
-            return new QueryAndParameters
-            {
-                Query = query,
-                Parameters = parameters,
-            };
         }
     }
 }

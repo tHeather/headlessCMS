@@ -14,6 +14,16 @@ namespace headlessCMS.Services
             _dbConnection = connection;
         }
 
+        protected async Task<IEnumerable<T>> ExecuteQueryAsync<T>(string query, DynamicParameters parameters)
+        {
+            return await _dbConnection.QueryAsync<T>(query, parameters);
+        }
+
+        protected async Task<T> ExecuteScalarAsync<T>(string query, DynamicParameters parameters)
+        {
+            return await _dbConnection.ExecuteScalarAsync<T>(query, parameters);
+        }
+
         protected async Task<IEnumerable<CollectionField>> GetCollectionFieldsByCollectionNameAsync(string collectionName)
         {
             var query = $"SELECT * FROM {ReservedTables.COLLECTION_FIELDS} WHERE collectionName = @collectionName;";
