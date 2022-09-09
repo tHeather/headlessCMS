@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddSingleton<SqlConnection>( 
+builder.Services.AddSingleton( 
     c => new SqlConnection( builder.Configuration.GetConnectionString("SqlConnection")) 
     );
 
@@ -24,7 +24,7 @@ builder.Services.AddControllers().ConfigureApiBehaviorOptions(options =>
 builder.Services.AddScoped<ISqlApiService, SqlApiService>();
 builder.Services.AddScoped<ISqlCmsService, SqlCmsService>();
 builder.Services.AddScoped<CollectionMetadataService>();
-builder.Services.AddScoped<CollectionDataService>();
+builder.Services.AddScoped<ApiService>();
 
 var app = builder.Build();
 

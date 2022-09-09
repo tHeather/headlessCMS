@@ -12,13 +12,13 @@ using System.Transactions;
 
 namespace headlessCMS.Services
 {
-    public class CollectionDataService
+    public class ApiService
     {
         private readonly SqlConnection _dbConnection;
         private readonly CollectionMetadataService _collectionMetadataService;
         private readonly ISqlApiService _sqlApiService;
 
-        public CollectionDataService(
+        public ApiService(
                 SqlConnection connection,
                 CollectionMetadataService collectionMetadataService,
                 ISqlApiService sqlApiService

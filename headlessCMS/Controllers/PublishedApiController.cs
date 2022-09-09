@@ -7,21 +7,20 @@ using headlessCMS.Services;
 namespace headlessCMS.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
-    public class APIController : ControllerBase
+    [Route("data")]
+    public class PublishedAPIController : ControllerBase
     {
-        private readonly CollectionDataService _collectionDataService;
+        private readonly ApiService _apiService;
 
-        public APIController(CollectionDataService collectionDataService)
+        public PublishedAPIController(ApiService apiService)
         {
-            _collectionDataService = collectionDataService;
+            _apiService = apiService;
         }
 
         [HttpPost("getdata")]
         public async Task<IActionResult> GetDataAsync(SelectQueryParametersDataCollection selectQueryParametersDataCollection)
         {
-            var data = await _collectionDataService.GetData(selectQueryParametersDataCollection);
-
+            var data = await _apiService.GetData(selectQueryParametersDataCollection);
             return Ok(data);
         }
 
@@ -35,7 +34,7 @@ namespace headlessCMS.Controllers
                 ColumnsWithValues = columnsWithValues
             };
 
-            await _collectionDataService.SaveDraftAsync(insertData);
+            await _apiService.SaveDraftAsync(insertData);
 
             return Ok();
         }
@@ -50,7 +49,7 @@ namespace headlessCMS.Controllers
                 DraftId = draftId
             };
 
-            await _collectionDataService.DeleteDataAsync(deleteData);
+            await _apiService.DeleteDataAsync(deleteData);
 
             return Ok();
         }
@@ -67,7 +66,7 @@ namespace headlessCMS.Controllers
                 ColumnsWithValues= ColumnsWithValues
             };
 
-            await _collectionDataService.UpdateDraftAsync(updateData);
+            await _apiService.UpdateDraftAsync(updateData);
 
             return Ok();
         }
@@ -76,7 +75,7 @@ namespace headlessCMS.Controllers
         public async Task<IActionResult> PublishDataAsync(string collectionName, [FromBody] Guid draftId)
         {
 
-            await _collectionDataService.PublishDataAsync(draftId, collectionName);
+            await _apiService.PublishDataAsync(draftId, collectionName);
 
             return Ok();
         }
@@ -85,7 +84,7 @@ namespace headlessCMS.Controllers
         public async Task<IActionResult> UnpublishDataAsync(string collectionName, [FromBody] Guid publishedVersionId)
         {
 
-            await _collectionDataService.UnpublishDataAsync(publishedVersionId, collectionName);
+            await _apiService.UnpublishDataAsync(publishedVersionId, collectionName);
 
             return Ok();
         }
