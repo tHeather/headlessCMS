@@ -49,7 +49,7 @@ namespace headlessCMS.Mappers
             }
         }
 
-        public static SelectQueryParametersDataCollection RemoveSchemaFromSelectQuery(
+        public static void RemoveSchemaFromSelectQuery(
             SelectQueryParametersDataCollection parameters)
         {
 
@@ -75,8 +75,6 @@ namespace headlessCMS.Mappers
             {
                 order.CollectionName = RemoveDBSchemaPrefix(order.CollectionName);
             }
-
-            return parameters;
         }
     }
 }
