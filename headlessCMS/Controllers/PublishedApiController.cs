@@ -4,11 +4,13 @@ using Microsoft.AspNetCore.Mvc;
 using headlessCMS.Models.Services.SelectQuery;
 using headlessCMS.Services;
 using headlessCMS.Models.Services.InsertQuery;
+using headlessCMS.Filters;
 
 namespace headlessCMS.Controllers
 {
     [ApiController]
     [Route("data")]
+    [RemoveDbSchemaActionFilter("collectionName")]
     public class PublishedAPIController : ControllerBase
     {
         private readonly ApiService _apiService;
@@ -19,9 +21,10 @@ namespace headlessCMS.Controllers
         }
 
         [HttpPost("get")]
-        public async Task<IActionResult> GetDataAsync(SelectQueryParametersDataCollection selectQueryParametersDataCollection)
+        [RemoveDbSchemaFromSelectQueryActionFilter("queryParameters")]
+        public async Task<IActionResult> GetDataAsync(SelectQueryParametersDataCollection queryParameters)
         {
-            var data = await _apiService.GetData(selectQueryParametersDataCollection);
+            var data = await _apiService.GetData(queryParameters);
             return Ok(data);
         }
 

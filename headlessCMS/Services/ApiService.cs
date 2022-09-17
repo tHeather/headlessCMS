@@ -1,15 +1,7 @@
-﻿using Dapper;
-using headlessCMS.Constants.TablesMetadata;
-using headlessCMS.Enums;
-using headlessCMS.Mappers;
-using headlessCMS.Models.Services;
-using headlessCMS.Models.Services.InsertQuery;
+﻿using headlessCMS.Models.Services.InsertQuery;
 using headlessCMS.Models.Services.SelectQuery;
-using headlessCMS.Models.ValueObjects;
 using headlessCMS.Services.Interfaces;
-using headlessCMS.Tools;
 using System.Data.SqlClient;
-using System.Transactions;
 
 namespace headlessCMS.Services
 {
@@ -37,13 +29,13 @@ namespace headlessCMS.Services
 
         public async Task<Guid> InsertPublishedDataAsync(InsertQueryParameters insertData)
         {
-           return await _sqlApiService.InsertDataAsync(insertData);
+            return await _sqlApiService.InsertDataAsync(insertData);
         }
 
         //public async Task<Guid> InsertDraftDataAsync(InsertQueryParameters insertData)
         //{
 
-           // add prefix to collectionName 
+        // add prefix to collectionName 
 
         //    return await _sqlApiService.InsertDataAsync(insertData);
         //}

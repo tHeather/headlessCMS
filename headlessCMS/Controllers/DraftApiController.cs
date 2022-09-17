@@ -1,6 +1,5 @@
-﻿using headlessCMS.Mappers;
+﻿using headlessCMS.Filters;
 using headlessCMS.Models.Services.SelectQuery;
-using headlessCMS.Models.Shared;
 using headlessCMS.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,6 +7,7 @@ namespace headlessCMS.Controllers
 {
     [ApiController]
     [Route("draft")]
+    [AddDraftDbSchemaActionFilter("collectionName")]
     public class DraftApiController : Controller
     {
         private readonly ApiService _apiService;
@@ -18,12 +18,10 @@ namespace headlessCMS.Controllers
         }
 
         [HttpPost("get")]
-        public async Task<IActionResult> GetDataAsync(SelectQueryParametersDataCollection selectQueryParametersDataCollection)
+        [AddDraftDbSchemaToSelectQueryActionFilter("queryParameters")]
+        public async Task<IActionResult> GetDataAsync(SelectQueryParametersDataCollection queryParameters)
         {
-            DraftApiRequestMapper.SelectQuery(selectQueryParametersDataCollection);
-
-            var data = await _apiService.GetData(selectQueryParametersDataCollection);
-
+            var data = await _apiService.GetData(queryParameters);
             return Ok(data);
         }
 
@@ -31,7 +29,7 @@ namespace headlessCMS.Controllers
         //public async Task<IActionResult> InsertDataAsync
         //    (string collectionName, [FromBody] List<ColumnWithValue> columnsWithValues)
         //{
-        //    var insertData  = new InsertQueryParameters() 
+        //    var insertData = new InsertQueryParameters()
         //    {
         //        CollectionName = collectionName,
         //        DataToInsert = columnsWithValues
