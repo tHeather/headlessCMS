@@ -27,18 +27,10 @@ namespace headlessCMS.Services
             return await _sqlApiService.ExecuteSelectQueryAsync(selectQueryParametersDataCollection);
         }
 
-        public async Task<Guid> InsertPublishedDataAsync(InsertQueryParameters insertData)
+        public async Task<Guid> InsertDataAsync(InsertQueryParameters insertData)
         {
             return await _sqlApiService.InsertDataAsync(insertData);
         }
-
-        //public async Task<Guid> InsertDraftDataAsync(InsertQueryParameters insertData)
-        //{
-
-        // add prefix to collectionName 
-
-        //    return await _sqlApiService.InsertDataAsync(insertData);
-        //}
 
         //public async Task<Guid> PublishDataAsync(Guid draftId, string collectionName)
         //{

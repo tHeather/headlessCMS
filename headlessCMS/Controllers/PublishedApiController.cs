@@ -38,7 +38,7 @@ namespace headlessCMS.Controllers
                 DataToInsert = columnsWithValues
             };
 
-            var savedDataId = await _apiService.InsertPublishedDataAsync(insertData);
+            var savedDataId = await _apiService.InsertDataAsync(insertData);
 
             return Ok(savedDataId);
         }
