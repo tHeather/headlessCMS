@@ -3,6 +3,7 @@ using headlessCMS.Models.ValueObjects;
 using Microsoft.AspNetCore.Mvc;
 using headlessCMS.Models.Services.SelectQuery;
 using headlessCMS.Services;
+using headlessCMS.Models.Services.InsertQuery;
 
 namespace headlessCMS.Controllers
 {
@@ -17,77 +18,92 @@ namespace headlessCMS.Controllers
             _apiService = apiService;
         }
 
-        [HttpPost("getdata")]
+        [HttpPost("get")]
         public async Task<IActionResult> GetDataAsync(SelectQueryParametersDataCollection selectQueryParametersDataCollection)
         {
             var data = await _apiService.GetData(selectQueryParametersDataCollection);
             return Ok(data);
         }
 
-        [HttpPost("{collectionName}")]
+        [HttpPost("{collectionName}/insert")]
         public async Task<IActionResult> InsertDataAsync
-            (string collectionName, [FromBody] List<List<ColumnWithValue>> columnsWithValues)
+            (string collectionName, [FromBody] List<ColumnWithValue> columnsWithValues)
         {
-            var insertData  = new InsertData() 
+            var insertData  = new InsertQueryParameters() 
             {
                 CollectionName = collectionName,
-                ColumnsWithValues = columnsWithValues
+                DataToInsert = columnsWithValues
             };
 
-            await _apiService.SaveDraftAsync(insertData);
+            var savedDataId = await _apiService.InsertPublishedDataAsync(insertData);
 
-            return Ok();
+            return Ok(savedDataId);
         }
 
-        [HttpDelete("{collectionName}/{draftId}")]
-        public async Task<IActionResult> DeleteDataAsync(string collectionName, Guid draftId)
-        {
+    //    [HttpPost("insert-many")]
+    //    public async Task<IActionResult> InsertDataAsync
+    //(string collectionName, [FromBody] List<List<ColumnWithValue>> columnsWithValues)
+    //    {
+    //        var insertData = new InsertData()
+    //        {
+    //            CollectionName = collectionName,
+    //            ColumnsWithValues = columnsWithValues
+    //        };
 
-            var deleteData = new DeleteData() 
-            {
-                CollectionName = collectionName,
-                DraftId = draftId
-            };
+    //        await _apiService.SaveDraftAsync(insertData);
 
-            await _apiService.DeleteDataAsync(deleteData);
+    //        return Ok();
+    //    }
 
-            return Ok();
-        }
+        //[HttpDelete("{collectionName}/{draftId}")]
+        //public async Task<IActionResult> DeleteDataAsync(string collectionName, Guid draftId)
+        //{
 
-        [HttpPut("{collectionName}/{id}")]
-        public async Task<IActionResult> UpdateDataAsync(
-            string collectionName, Guid id, [FromBody] List<ColumnWithValue> ColumnsWithValues)
-        {
+        //    var deleteData = new DeleteData() 
+        //    {
+        //        CollectionName = collectionName,
+        //        DraftId = draftId
+        //    };
 
-            var updateData = new UpdateData()
-            {
-                CollectionName = collectionName,
-                RowId = id,
-                ColumnsWithValues= ColumnsWithValues
-            };
+        //    await _apiService.DeleteDataAsync(deleteData);
 
-            await _apiService.UpdateDraftAsync(updateData);
+        //    return Ok();
+        //}
 
-            return Ok();
-        }
+        //[HttpPut("{collectionName}/{id}")]
+        //public async Task<IActionResult> UpdateDataAsync(
+        //    string collectionName, Guid id, [FromBody] List<ColumnWithValue> ColumnsWithValues)
+        //{
 
-        [HttpPost("publish/{collectionName}")]
-        public async Task<IActionResult> PublishDataAsync(string collectionName, [FromBody] Guid draftId)
-        {
+        //    var updateData = new UpdateData()
+        //    {
+        //        CollectionName = collectionName,
+        //        RowId = id,
+        //        ColumnsWithValues= ColumnsWithValues
+        //    };
 
-            await _apiService.PublishDataAsync(draftId, collectionName);
+        //    await _apiService.UpdateDraftAsync(updateData);
 
-            return Ok();
-        }
+        //    return Ok();
+        //}
 
-        [HttpPost("unpublish/{collectionName}")]
-        public async Task<IActionResult> UnpublishDataAsync(string collectionName, [FromBody] Guid publishedVersionId)
-        {
+        //[HttpPost("publish/{collectionName}")]
+        //public async Task<IActionResult> PublishDataAsync(string collectionName, [FromBody] Guid draftId)
+        //{
 
-            await _apiService.UnpublishDataAsync(publishedVersionId, collectionName);
+        //    await _apiService.PublishDataAsync(draftId, collectionName);
 
-            return Ok();
-        }
+        //    return Ok();
+        //}
+
+        //[HttpPost("unpublish/{collectionName}")]
+        //public async Task<IActionResult> UnpublishDataAsync(string collectionName, [FromBody] Guid publishedVersionId)
+        //{
+
+        //    await _apiService.UnpublishDataAsync(publishedVersionId, collectionName);
+
+        //    return Ok();
+        //}
 
     }
 }

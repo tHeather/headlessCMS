@@ -1,7 +1,7 @@
 ﻿using Dapper;
 using headlessCMS.Constants.TablesMetadata;
-using headlessCMS.Dictionary;
 using headlessCMS.Models.Services;
+using headlessCMS.Models.Services.InsertQuery;
 using headlessCMS.Models.Services.SelectQuery;
 using headlessCMS.QueryMakers;
 using headlessCMS.Services.Interfaces;
@@ -17,71 +17,95 @@ namespace headlessCMS.Services
         {
         }
 
-        public async Task<Guid> ExecuteInsertQueryAsync(InsertQueryParametersDataCollection insertQueryParameters)
+        public async Task<Guid> InsertDataAsync(InsertQueryParameters insertQueryParameters)
         {
             var collectionFields = await GetCollectionFieldsByCollectionNameAsync(insertQueryParameters.CollectionName);
             if (!collectionFields.Any()) return Guid.Empty;
 
-            var values = new StringBuilder();
-            var columns = string.Join(",", collectionFields.Select(f => f.Name));
+            var values = new List<string>();
+            var columns = collectionFields.Select(f => f.Name);
             var parameters = new DynamicParameters();
-            var beginningOfValues = $"({(int)insertQueryParameters.DataState}, NULL,";
 
-            foreach (var (rowToInsert, index) in insertQueryParameters.DataToInsert.Select((rowToInsert, index) => (rowToInsert, index)))
+            foreach (var field in collectionFields)
             {
-                values.Append(beginningOfValues);
-                foreach (var field in collectionFields)
-                {
-                    var value = rowToInsert.SingleOrDefault(d => d.Name == field.Name)?.Value;
-                    if (value == null) continue;
+                var value = insertQueryParameters.DataToInsert.SingleOrDefault(d => d.Name == field.Name)?.Value;
+                if (value == null) continue;
 
-                    var dapperType = DataTypesMapper.MapDatabaseTypeToDapper[field.Type];
-
-                    parameters.Add($"@{index}{field.Name}", value, dapperType);
-                    values.Append($"@{index}{field.Name},");
-                }
-                if (values[^1] == '(')
-                {
-                    values.Remove(values.Length - 1, 1);
-                }
-                else
-                {
-                    var isLastRow = insertQueryParameters.DataToInsert.Count == index + 1;
-                    values.Replace(",", isLastRow ? ")" : "),", values.Length - 1, 1);
-                }
+                parameters.Add(field.Name, value);
+                values.Add($"@{field.Name}");
             }
 
-            var query = @$"INSERT INTO {insertQueryParameters.CollectionName} 
-                           ({DataCollectionReservedFields.DATA_STATE}, {DataCollectionReservedFields.PUBLISHED_VERSION_ID}, {columns}) 
-                           OUTPUT inserted.id
-                           VALUES {values};";
-
+            var query = SqlApiQueryMaker.MakeInsertQuery(insertQueryParameters.CollectionName, columns, values);
             return await _dbConnection.ExecuteScalarAsync<Guid>(query, parameters);
         }
 
-        public async Task<Guid> ExecuteDeleteQueryAsync(DeleteQueryParametersDataCollection deleteQueryParameters)
-        {
-            var collectionFields = await GetCollectionFieldsByCollectionNameAsync(deleteQueryParameters.CollectionName);
-            if (!collectionFields.Any()) return Guid.Empty;
 
-            var conditions = new StringBuilder();
-            var parameters = new DynamicParameters();
+        // overload for insert many
+        ////public async Task<Guid> InsertDataAsync(InsertQueryParametersDataCollection insertQueryParameters)
+        ////{
+        ////    var collectionFields = await GetCollectionFieldsByCollectionNameAsync(insertQueryParameters.CollectionName);
+        ////    if (!collectionFields.Any()) return Guid.Empty;
 
-            foreach (var (idAndDataState, index) in deleteQueryParameters.IdsAndDataStates.Select((idAndDataState, index) => (idAndDataState, index)))
-            {
-                var idParameterName = $"@{index}idName";
-                var dataStateParameterName = $"@{index}dataState";
+        ////    var values = new StringBuilder();
+        ////    var columns = string.Join(",", collectionFields.Select(f => f.Name));
+        ////    var parameters = new DynamicParameters();
+        ////    var beginningOfValues = $"({(int)insertQueryParameters.DataState}, NULL,";
 
-                var separator = deleteQueryParameters.IdsAndDataStates.Count == index + 1 ? "" : "OR";
-                conditions.Append(@$"({DataCollectionReservedFields.ID} = {idParameterName} AND {DataCollectionReservedFields.DATA_STATE} = {dataStateParameterName}) {separator}");
-                parameters.Add(idParameterName, idAndDataState.Id, DbType.Guid);
-                parameters.Add(dataStateParameterName, (int)idAndDataState.DataState, DbType.Int32);
-            }
+        ////    foreach (var (rowToInsert, index) in insertQueryParameters.DataToInsert.Select((rowToInsert, index) => (rowToInsert, index)))
+        ////    {
+        ////        values.Append(beginningOfValues);
+        ////        foreach (var field in collectionFields)
+        ////        {
+        ////            var value = rowToInsert.SingleOrDefault(d => d.Name == field.Name)?.Value;
+        ////            if (value == null) continue;
 
-            return await _dbConnection.ExecuteScalarAsync<Guid>(@$"DELETE FROM {deleteQueryParameters.CollectionName}
-                                                                   OUTPUT deleted.Id
-                                                                   WHERE {conditions};", parameters);
-        }
+        ////            var dapperType = DataTypesMapper.MapDatabaseTypeToDapper[field.Type];
+
+        ////            parameters.Add($"@{index}{field.Name}", value, dapperType);
+        ////            values.Append($"@{index}{field.Name},");
+        ////        }
+        ////        if (values[^1] == '(')
+        ////        {
+        ////            values.Remove(values.Length - 1, 1);
+        ////        }
+        ////        else
+        ////        {
+        ////            var isLastRow = insertQueryParameters.DataToInsert.Count == index + 1;
+        ////            values.Replace(",", isLastRow ? ")" : "),", values.Length - 1, 1);
+        ////        }
+        ////    }
+
+        ////    var query = @$"INSERT INTO {insertQueryParameters.CollectionName} 
+        ////                   ({DataCollectionReservedFields.PUBLISHED_VERSION_ID}, {columns}) 
+        ////                   OUTPUT inserted.id
+        ////                   VALUES {values};";
+
+        ////    return await _dbConnection.ExecuteScalarAsync<Guid>(query, parameters);
+        ////}
+
+        //public async Task<Guid> ExecuteDeleteQueryAsync(DeleteQueryParametersDataCollection deleteQueryParameters)
+        //{
+        //    var collectionFields = await GetCollectionFieldsByCollectionNameAsync(deleteQueryParameters.CollectionName);
+        //    if (!collectionFields.Any()) return Guid.Empty;
+
+        //    var conditions = new StringBuilder();
+        //    var parameters = new DynamicParameters();
+
+        //    foreach (var (idAndDataState, index) in deleteQueryParameters.IdsAndDataStates.Select((idAndDataState, index) => (idAndDataState, index)))
+        //    {
+        //        var idParameterName = $"@{index}idName";
+        //        var dataStateParameterName = $"@{index}dataState";
+
+        //        var separator = deleteQueryParameters.IdsAndDataStates.Count == index + 1 ? "" : "OR";
+        //        conditions.Append(@$"({DataCollectionReservedFields.ID} = {idParameterName} AND {DataCollectionReservedFields.DATA_STATE} = {dataStateParameterName}) {separator}");
+        //        parameters.Add(idParameterName, idAndDataState.Id, DbType.Guid);
+        //        parameters.Add(dataStateParameterName, (int)idAndDataState.DataState, DbType.Int32);
+        //    }
+
+        //    return await _dbConnection.ExecuteScalarAsync<Guid>(@$"DELETE FROM {deleteQueryParameters.CollectionName}
+        //                                                           OUTPUT deleted.Id
+        //                                                           WHERE {conditions};", parameters);
+        //}
 
         public async Task<List<dynamic>> ExecuteSelectQueryAsync(SelectQueryParametersDataCollection selectQueryParameters)
         {

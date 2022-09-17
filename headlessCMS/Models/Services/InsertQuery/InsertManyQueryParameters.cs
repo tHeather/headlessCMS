@@ -1,9 +1,9 @@
 ﻿using headlessCMS.Enums;
 using headlessCMS.Models.Shared;
 
-namespace headlessCMS.Models.Services
+namespace headlessCMS.Models.Services.InsertQuery
 {
-    public class InsertQueryParametersDataCollection
+    public class InsertManyQueryParameters
     {
         public string CollectionName { get; set; }
         public DataState DataState { get; set; }

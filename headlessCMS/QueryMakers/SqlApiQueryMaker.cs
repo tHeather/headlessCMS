@@ -10,6 +10,28 @@ namespace headlessCMS.QueryMakers
 {
     public static class SqlApiQueryMaker
     {
+        public static string MakeInsertQuery(
+            string collectionName, 
+            IEnumerable<string> columns, 
+            IEnumerable<string> values
+        )
+        {
+            return @$"INSERT INTO {collectionName} ({string.Join(",", columns)}) 
+                      OUTPUT inserted.id
+                      VALUES ({string.Join(",",values)});";
+        }
+
+        //public static string MakeInsertManyQuery(
+        //    string collectionName, 
+        //    IEnumerable<string> columns, 
+        //    IEnumerable<string> values
+        //)
+        //{
+        //    return @$"INSERT INTO {collectionName} ({string.Join(",", columns)}) 
+        //              OUTPUT inserted.id
+        //              VALUES {string.Join(",",values)};";
+        //}
+
         public static StringBuilder MakePaginationPartForSelectQuery(SelectQueryPagination pagination)
         {
             var rowsToskip = pagination.PageSize * pagination.PageNumber;
