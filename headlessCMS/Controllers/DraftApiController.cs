@@ -1,4 +1,5 @@
 ﻿using headlessCMS.Filters;
+using headlessCMS.Models.Services.Api.InsertQuery;
 using headlessCMS.Models.Services.InsertQuery;
 using headlessCMS.Models.Services.SelectQuery;
 using headlessCMS.Models.Shared;
@@ -29,7 +30,7 @@ namespace headlessCMS.Controllers
 
         [HttpPost("{collectionName}/insert")]
         public async Task<IActionResult> InsertDataAsync
-            (string collectionName, [FromBody] List<ColumnWithValue> columnsWithValues)
+            (string collectionName, InsertDataRow columnsWithValues)
         {
             var insertData  = new InsertQueryParameters() 
             {
@@ -42,19 +43,20 @@ namespace headlessCMS.Controllers
             return Ok(savedDataId);
         }
 
-        //[HttpPost("{collectionName}/insert")]
-        //public async Task<IActionResult> InsertDataAsync
-        //    (string collectionName, [FromBody] List<ColumnWithValue> columnsWithValues)
-        //{
-        //    var insertData = new InsertQueryParameters()
-        //    {
-        //        CollectionName = collectionName,
-        //        DataToInsert = columnsWithValues
-        //    };
+        [HttpPost("{collectionName}/insert-many")]
+        public async Task<IActionResult> InsertDataAsync
+            (string collectionName, List<InsertDataRow> dataToInsert)
+        {
+            var insertData = new InsertManyQueryParameters()
+            {
+                CollectionName = collectionName,
+                DataToInsert = dataToInsert
+            };
 
-        //    var savedDataId = await _apiService.InsertPublishedDataAsync(insertData);
+            var insertedIds = await _apiService.InsertManyDataAsync(insertData);
 
-        //    return Ok(savedDataId);
-        //}
+            return Ok(insertedIds);
+        }
+
     }
 }

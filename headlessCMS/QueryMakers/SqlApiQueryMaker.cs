@@ -3,6 +3,7 @@ using headlessCMS.Constants;
 using headlessCMS.Mappers;
 using headlessCMS.Models.Services;
 using headlessCMS.Models.Services.SelectQuery;
+using Microsoft.Extensions.Primitives;
 using Newtonsoft.Json;
 using System.Text;
 
@@ -21,16 +22,25 @@ namespace headlessCMS.QueryMakers
                       VALUES ({string.Join(",",values)});";
         }
 
-        //public static string MakeInsertManyQuery(
-        //    string collectionName, 
-        //    IEnumerable<string> columns, 
-        //    IEnumerable<string> values
-        //)
-        //{
-        //    return @$"INSERT INTO {collectionName} ({string.Join(",", columns)}) 
-        //              OUTPUT inserted.id
-        //              VALUES {string.Join(",",values)};";
-        //}
+        public static string MakeInsertManyQuery(
+            string collectionName,
+            IEnumerable<string> columns,
+            IEnumerable<IEnumerable<string>> valueRows
+        )
+        {
+            var values = new StringBuilder();
+
+            foreach (var row in valueRows)
+            {
+                values.Append($",({string.Join(",", row)})");
+            }
+
+            values.Remove(0,1);
+
+            return @$"INSERT INTO {collectionName} ({string.Join(",", columns)}) 
+                      OUTPUT inserted.id 
+                      VALUES {values};";
+        }
 
         public static StringBuilder MakePaginationPartForSelectQuery(SelectQueryPagination pagination)
         {

@@ -1,5 +1,4 @@
-﻿using headlessCMS.Enums;
-using headlessCMS.Models.Shared;
+﻿using headlessCMS.Models.Services.Api.InsertQuery;
 
 namespace headlessCMS.Models.Services.InsertQuery
 {
@@ -7,6 +6,6 @@ namespace headlessCMS.Models.Services.InsertQuery
     {
         public string CollectionName { get; set; }
 
-        public List<ColumnWithValue> DataToInsert { get; set; }
+        public InsertDataRow DataToInsert { get; set; }
     }
 }

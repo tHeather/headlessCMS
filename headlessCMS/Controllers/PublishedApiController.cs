@@ -1,10 +1,9 @@
-﻿using headlessCMS.Models.Shared;
-using headlessCMS.Models.ValueObjects;
-using Microsoft.AspNetCore.Mvc;
+﻿using headlessCMS.Filters;
+using headlessCMS.Models.Services.Api.InsertQuery;
+using headlessCMS.Models.Services.InsertQuery;
 using headlessCMS.Models.Services.SelectQuery;
 using headlessCMS.Services;
-using headlessCMS.Models.Services.InsertQuery;
-using headlessCMS.Filters;
+using Microsoft.AspNetCore.Mvc;
 
 namespace headlessCMS.Controllers
 {
@@ -30,12 +29,12 @@ namespace headlessCMS.Controllers
 
         [HttpPost("{collectionName}/insert")]
         public async Task<IActionResult> InsertDataAsync
-            (string collectionName, [FromBody] List<ColumnWithValue> columnsWithValues)
+            (string collectionName, InsertDataRow dataToInsert)
         {
-            var insertData  = new InsertQueryParameters() 
+            var insertData = new InsertQueryParameters()
             {
                 CollectionName = collectionName,
-                DataToInsert = columnsWithValues
+                DataToInsert = dataToInsert
             };
 
             var savedDataId = await _apiService.InsertDataAsync(insertData);
@@ -43,20 +42,20 @@ namespace headlessCMS.Controllers
             return Ok(savedDataId);
         }
 
-    //    [HttpPost("insert-many")]
-    //    public async Task<IActionResult> InsertDataAsync
-    //(string collectionName, [FromBody] List<List<ColumnWithValue>> columnsWithValues)
-    //    {
-    //        var insertData = new InsertData()
-    //        {
-    //            CollectionName = collectionName,
-    //            ColumnsWithValues = columnsWithValues
-    //        };
+        [HttpPost("{collectionName}/insert-many")]
+        public async Task<IActionResult> InsertDataAsync
+            (string collectionName, List<InsertDataRow> dataToInsert)
+        {
+            var insertData = new InsertManyQueryParameters()
+            {
+                CollectionName = collectionName,
+                DataToInsert = dataToInsert
+            };
 
-    //        await _apiService.SaveDraftAsync(insertData);
+            var insertedIds = await _apiService.InsertManyDataAsync(insertData);
 
-    //        return Ok();
-    //    }
+            return Ok(insertedIds);
+        }
 
         //[HttpDelete("{collectionName}/{draftId}")]
         //public async Task<IActionResult> DeleteDataAsync(string collectionName, Guid draftId)

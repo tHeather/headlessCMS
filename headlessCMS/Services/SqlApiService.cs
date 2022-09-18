@@ -17,9 +17,9 @@ namespace headlessCMS.Services
         {
         }
 
-        public async Task<Guid> InsertDataAsync(InsertQueryParameters insertQueryParameters)
+        public async Task<Guid> InsertDataAsync(InsertQueryParameters queryParameters)
         {
-            var collectionFields = await GetCollectionFieldsByCollectionNameAsync(insertQueryParameters.CollectionName);
+            var collectionFields = await GetCollectionFieldsByCollectionNameAsync(queryParameters.CollectionName);
             if (!collectionFields.Any()) return Guid.Empty;
 
             var values = new List<string>();
@@ -28,60 +28,40 @@ namespace headlessCMS.Services
 
             foreach (var field in collectionFields)
             {
-                var value = insertQueryParameters.DataToInsert.SingleOrDefault(d => d.Name == field.Name)?.Value;
-                if (value == null) continue;
-
+                var value = queryParameters.DataToInsert.SingleOrDefault(d => d.Name == field.Name)?.Value;
                 parameters.Add(field.Name, value);
                 values.Add($"@{field.Name}");
             }
 
-            var query = SqlApiQueryMaker.MakeInsertQuery(insertQueryParameters.CollectionName, columns, values);
+            var query = SqlApiQueryMaker.MakeInsertQuery(queryParameters.CollectionName, columns, values);
             return await _dbConnection.ExecuteScalarAsync<Guid>(query, parameters);
         }
 
+        public async Task<IEnumerable<Guid>> InsertManyDataAsync(InsertManyQueryParameters queryParameters)
+        {
+            var collectionFields = await GetCollectionFieldsByCollectionNameAsync(queryParameters.CollectionName);
+            if (!collectionFields.Any()) return new List<Guid>();
 
-        // overload for insert many
-        ////public async Task<Guid> InsertDataAsync(InsertQueryParametersDataCollection insertQueryParameters)
-        ////{
-        ////    var collectionFields = await GetCollectionFieldsByCollectionNameAsync(insertQueryParameters.CollectionName);
-        ////    if (!collectionFields.Any()) return Guid.Empty;
+            var valueRows = new List<List<string>>();
+            var columns = collectionFields.Select(f => f.Name);
+            var parameters = new DynamicParameters();
 
-        ////    var values = new StringBuilder();
-        ////    var columns = string.Join(",", collectionFields.Select(f => f.Name));
-        ////    var parameters = new DynamicParameters();
-        ////    var beginningOfValues = $"({(int)insertQueryParameters.DataState}, NULL,";
+            foreach (var row in queryParameters.DataToInsert)
+            {
+                var rowId = Guid.NewGuid().ToString("N");
+                var valueRow = new List<string>();
+                foreach (var field in collectionFields)
+                {
+                    var value = row.SingleOrDefault(d => d.Name == field.Name)?.Value;
+                    parameters.Add($"{field.Name}{rowId}", value);
+                    valueRow.Add($"@{field.Name}{rowId}");
+                }
+                valueRows.Add(valueRow);
+            }
 
-        ////    foreach (var (rowToInsert, index) in insertQueryParameters.DataToInsert.Select((rowToInsert, index) => (rowToInsert, index)))
-        ////    {
-        ////        values.Append(beginningOfValues);
-        ////        foreach (var field in collectionFields)
-        ////        {
-        ////            var value = rowToInsert.SingleOrDefault(d => d.Name == field.Name)?.Value;
-        ////            if (value == null) continue;
-
-        ////            var dapperType = DataTypesMapper.MapDatabaseTypeToDapper[field.Type];
-
-        ////            parameters.Add($"@{index}{field.Name}", value, dapperType);
-        ////            values.Append($"@{index}{field.Name},");
-        ////        }
-        ////        if (values[^1] == '(')
-        ////        {
-        ////            values.Remove(values.Length - 1, 1);
-        ////        }
-        ////        else
-        ////        {
-        ////            var isLastRow = insertQueryParameters.DataToInsert.Count == index + 1;
-        ////            values.Replace(",", isLastRow ? ")" : "),", values.Length - 1, 1);
-        ////        }
-        ////    }
-
-        ////    var query = @$"INSERT INTO {insertQueryParameters.CollectionName} 
-        ////                   ({DataCollectionReservedFields.PUBLISHED_VERSION_ID}, {columns}) 
-        ////                   OUTPUT inserted.id
-        ////                   VALUES {values};";
-
-        ////    return await _dbConnection.ExecuteScalarAsync<Guid>(query, parameters);
-        ////}
+            var query = SqlApiQueryMaker.MakeInsertManyQuery(queryParameters.CollectionName, columns, valueRows);
+            return await _dbConnection.QueryAsync<Guid>(query, parameters);
+        }
 
         //public async Task<Guid> ExecuteDeleteQueryAsync(DeleteQueryParametersDataCollection deleteQueryParameters)
         //{

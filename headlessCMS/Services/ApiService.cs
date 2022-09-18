@@ -1,24 +1,15 @@
 ﻿using headlessCMS.Models.Services.InsertQuery;
 using headlessCMS.Models.Services.SelectQuery;
 using headlessCMS.Services.Interfaces;
-using System.Data.SqlClient;
 
 namespace headlessCMS.Services
 {
     public class ApiService
     {
-        private readonly SqlConnection _dbConnection;
-        private readonly CollectionMetadataService _collectionMetadataService;
         private readonly ISqlApiService _sqlApiService;
 
-        public ApiService(
-                SqlConnection connection,
-                CollectionMetadataService collectionMetadataService,
-                ISqlApiService sqlApiService
-            )
+        public ApiService(ISqlApiService sqlApiService)
         {
-            _dbConnection = connection;
-            _collectionMetadataService = collectionMetadataService;
             _sqlApiService = sqlApiService;
         }
 
@@ -30,6 +21,11 @@ namespace headlessCMS.Services
         public async Task<Guid> InsertDataAsync(InsertQueryParameters insertData)
         {
             return await _sqlApiService.InsertDataAsync(insertData);
+        }
+
+        public async Task<IEnumerable<Guid>> InsertManyDataAsync(InsertManyQueryParameters insertData)
+        {
+            return await _sqlApiService.InsertManyDataAsync(insertData);
         }
 
         //public async Task<Guid> PublishDataAsync(Guid draftId, string collectionName)
