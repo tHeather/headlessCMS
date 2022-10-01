@@ -4,7 +4,7 @@ using headlessCMS.Models.Services.SelectQuery;
 
 namespace headlessCMS.Services.Interfaces
 {
-    public interface ISqlApiService
+    public interface ISqlDataService
     {
         public Task<Guid> InsertDataAsync(InsertQueryParameters insertQueryParameters);
 

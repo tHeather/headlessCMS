@@ -11,9 +11,9 @@ using System.Text;
 
 namespace headlessCMS.Services
 {
-    public class SqlApiService : SqlService, ISqlApiService
+    public class SqlDataService : SqlService, ISqlDataService
     {
-        public SqlApiService(SqlConnection connection) : base(connection)
+        public SqlDataService(SqlConnection connection) : base(connection)
         {
         }
 

@@ -1,13 +1,13 @@
-using System.Data.SqlClient;
 using headlessCMS.Models.Erros;
 using headlessCMS.Services;
 using headlessCMS.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using System.Data.SqlClient;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddSingleton( 
-    c => new SqlConnection( builder.Configuration.GetConnectionString("SqlConnection")) 
+builder.Services.AddSingleton(
+    c => new SqlConnection(builder.Configuration.GetConnectionString("SqlConnection"))
     );
 
 builder.Services.AddEndpointsApiExplorer();
@@ -21,10 +21,9 @@ builder.Services.AddControllers().ConfigureApiBehaviorOptions(options =>
     };
 }).AddNewtonsoftJson();
 
-builder.Services.AddScoped<ISqlApiService, SqlApiService>();
+builder.Services.AddScoped<ISqlDataService, SqlDataService>();
 builder.Services.AddScoped<ISqlCmsService, SqlCmsService>();
 builder.Services.AddScoped<CollectionMetadataService>();
-builder.Services.AddScoped<ApiService>();
 
 var app = builder.Build();
 

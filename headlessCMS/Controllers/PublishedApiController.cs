@@ -2,7 +2,7 @@
 using headlessCMS.Models.Services.Api.InsertQuery;
 using headlessCMS.Models.Services.InsertQuery;
 using headlessCMS.Models.Services.SelectQuery;
-using headlessCMS.Services;
+using headlessCMS.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace headlessCMS.Controllers
@@ -12,18 +12,18 @@ namespace headlessCMS.Controllers
     [RemoveDbSchemaActionFilter("collectionName")]
     public class PublishedAPIController : ControllerBase
     {
-        private readonly ApiService _apiService;
+        private readonly ISqlDataService _sqlDataService;
 
-        public PublishedAPIController(ApiService apiService)
+        public PublishedAPIController(ISqlDataService sqlDataService)
         {
-            _apiService = apiService;
+            _sqlDataService = sqlDataService;
         }
 
         [HttpPost("get")]
         [RemoveDbSchemaFromSelectQueryActionFilter("queryParameters")]
         public async Task<IActionResult> GetDataAsync(SelectQueryParametersDataCollection queryParameters)
         {
-            var data = await _apiService.GetData(queryParameters);
+            var data = await _sqlDataService.ExecuteSelectQueryAsync(queryParameters);
             return Ok(data);
         }
 
@@ -37,7 +37,7 @@ namespace headlessCMS.Controllers
                 DataToInsert = dataToInsert
             };
 
-            var savedDataId = await _apiService.InsertDataAsync(insertData);
+            var savedDataId = await _sqlDataService.InsertDataAsync(insertData);
 
             return Ok(savedDataId);
         }
@@ -52,7 +52,7 @@ namespace headlessCMS.Controllers
                 DataToInsert = dataToInsert
             };
 
-            var insertedIds = await _apiService.InsertManyDataAsync(insertData);
+            var insertedIds = await _sqlDataService.InsertManyDataAsync(insertData);
 
             return Ok(insertedIds);
         }
